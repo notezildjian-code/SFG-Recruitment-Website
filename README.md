@@ -4,6 +4,8 @@ A free, static job-application website for Star Fashion Group (SFG). Applicants 
 bilingual (Thai/English) multi-step form; submissions land in a Google Sheet, with attached
 documents saved to Google Drive. No paid hosting or backend required.
 
+**Live site:** https://notezildjian-code.github.io/SFG-Recruitment-Website/
+
 ## How it works
 
 - `index.html` + `js/*.js` + `css/styles.css` — the form itself. Plain HTML/CSS/JS, no build step.
