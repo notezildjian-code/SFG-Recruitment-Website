@@ -104,12 +104,12 @@ function renderConsentGate(state) {
     <div class="consent-gate">
       <h2>${bilingual({ th: 'ก่อนเริ่มกรอกใบสมัคร', en: 'Before You Begin' })}</h2>
       <p class="consent-text-th">
-        บริษัท สตาร์ แฟชั่น กรุ๊ป จำกัด ("บริษัท") มีความจำเป็นต้องเก็บรวบรวม ใช้ และเปิดเผยข้อมูลส่วนบุคคลของท่าน
+        กลุ่มบริษัทสตาร์ แฟชั่น ("บริษัท") มีความจำเป็นต้องเก็บรวบรวม ใช้ และเปิดเผยข้อมูลส่วนบุคคลของท่าน
         รวมถึงข้อมูลส่วนบุคคลที่มีความอ่อนไหว (เช่น เลขบัตรประชาชน ข้อมูลสุขภาพ และประวัติอาชญากรรม)
         เพื่อวัตถุประสงค์ในการพิจารณารับสมัครงานเท่านั้น ก่อนกรอกแบบฟอร์มนี้ ท่านต้องยินยอมให้บริษัทเก็บรวบรวมข้อมูลดังกล่าว
       </p>
       <p class="consent-text-en">
-        Star Fashion Group Co., Ltd. ("the Company") needs to collect, use, and disclose your personal data, including
+        SFG | star fashion group ("the Company") needs to collect, use, and disclose your personal data, including
         sensitive personal data (e.g. ID card number, health information, and criminal record), solely for
         recruitment purposes. Before filling in this form, you must consent to this data collection.
       </p>
