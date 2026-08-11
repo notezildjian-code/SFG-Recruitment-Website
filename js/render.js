@@ -197,9 +197,9 @@ function renderWorkHistoryStep(state) {
       (row, i) => `
     <div class="repeater-row" data-repeater="workHistory" data-index="${i}">
       <div class="field-grid">
-        <div class="field-group"><label class="field-label">${bilingual({ th: 'จากเดือน/ปี', en: 'From (Month/Year)' })}</label><input type="text" placeholder="MM/YYYY" data-path="workHistory.${i}.from" value="${escapeHtml(row.from || '')}" /></div>
+        <div class="field-group"><label class="field-label">${bilingual({ th: 'จากเดือน/ปี (พ.ศ.)', en: 'From (Month/Year)' })}</label><input type="text" placeholder="MM/YYYY" data-path="workHistory.${i}.from" value="${escapeHtml(row.from || '')}" /></div>
         <div class="field-group">
-          <label class="field-label">${bilingual({ th: 'ถึงเดือน/ปี', en: 'To (Month/Year)' })}</label>
+          <label class="field-label">${bilingual({ th: 'ถึงเดือน/ปี (พ.ศ.)', en: 'To (Month/Year)' })}</label>
           <div class="input-with-checkbox">
             <input type="text" placeholder="MM/YYYY" data-path="workHistory.${i}.to" value="${escapeHtml(row.to || '')}" ${row.isCurrent ? 'disabled' : ''} />
             <label class="checkbox-inline"><input type="checkbox" data-path="workHistory.${i}.isCurrent" ${row.isCurrent ? 'checked' : ''} />${bilingual({ th: 'ถึงปัจจุบัน', en: 'Present' })}</label>
