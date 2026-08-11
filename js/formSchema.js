@@ -18,7 +18,6 @@ const COMPUTER_APPS = [
   { value: 'excel', label: { th: 'Excel', en: 'Excel' } },
   { value: 'powerpoint', label: { th: 'PowerPoint', en: 'PowerPoint' } },
   { value: 'canva', label: { th: 'Canva', en: 'Canva' } },
-  { value: 'capcut', label: { th: 'CapCut', en: 'CapCut' } },
   { value: 'chatgpt', label: { th: 'ChatGPT', en: 'ChatGPT' } },
   { value: 'claude', label: { th: 'Claude', en: 'Claude' } },
   { value: 'gemini', label: { th: 'Gemini', en: 'Gemini' } },

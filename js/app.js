@@ -1,5 +1,11 @@
+// Bumped whenever the state shape changes in a backwards-incompatible way.
+// A saved draft from an older version is discarded on load instead of crashing
+// against fields it no longer has (or fields it has that got renamed/removed).
+const SCHEMA_VERSION = 6;
+
 function createInitialState() {
   return {
+    schemaVersion: SCHEMA_VERSION,
     applicationId: uuid(),
     meta: { formLoadedAt: Date.now() },
     language: null,
@@ -17,7 +23,7 @@ function createInitialState() {
     workHistory: [{ from: '', to: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' }],
     skills: {
       languages: {
-        english: { speaking: '', writing: '', reading: '', testResult: '' },
+        english: { overall: '', testResult: '' },
         additional: [],
       },
       computer: {
@@ -53,7 +59,12 @@ const App = {
 
   init() {
     const restored = findAnyDraft();
-    this.state = restored || createInitialState();
+    if (restored && restored.schemaVersion !== SCHEMA_VERSION) {
+      clearDraft(restored.applicationId);
+      this.state = createInitialState();
+    } else {
+      this.state = restored || createInitialState();
+    }
     if (!this.state.meta) this.state.meta = { formLoadedAt: Date.now() };
     if (!('availablePositions' in this.state)) this.state.availablePositions = [];
 
@@ -168,7 +179,7 @@ const App = {
         if (key === 'education') this.state.education.push({ level: '', institution: '', facultyMajor: '', gpa: '' });
         if (key === 'workHistory') this.state.workHistory.push({ from: '', to: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' });
         if (key === 'emergencyContacts') this.state.other.emergencyContacts.push({ name: '', mobile: '', relationship: '' });
-        if (key === 'additionalLanguages') this.state.skills.languages.additional.push({ name: '', speaking: '', writing: '', reading: '' });
+        if (key === 'additionalLanguages') this.state.skills.languages.additional.push({ name: '', overall: '' });
         if (key === 'additionalApps') this.state.skills.computer.additionalApps.push({ name: '', rating: '' });
         saveDraft(this.state);
         this.render();

@@ -11,10 +11,10 @@ var APPLICATIONS_HEADERS = [
   'MobilePhone', 'Email', 'LineId', 'Address', 'PostalCode',
   'MaritalStatus', 'SpouseName', 'SpouseAge', 'NumChildren',
   'MilitaryStatus', 'MilitaryServedYearBE', 'MilitaryNotYetYearBE', 'MilitaryExemptOtherReason',
-  'Lang_English_Speaking', 'Lang_English_Writing', 'Lang_English_Reading', 'Lang_English_TestResult',
+  'Lang_English_Overall', 'Lang_English_TestResult',
   'Computer_CanUse',
   'Computer_Word_Rating', 'Computer_Excel_Rating', 'Computer_PowerPoint_Rating',
-  'Computer_Canva_Rating', 'Computer_CapCut_Rating', 'Computer_ChatGPT_Rating', 'Computer_Claude_Rating', 'Computer_Gemini_Rating',
+  'Computer_Canva_Rating', 'Computer_ChatGPT_Rating', 'Computer_Claude_Rating', 'Computer_Gemini_Rating',
   'Health_Illness_YN', 'Health_Illness_Specify',
   'Health_Chronic_YN', 'Health_Chronic_Specify',
   'Health_Disability_YN', 'Health_Disability_Specify',
@@ -31,7 +31,7 @@ var APPLICATIONS_HEADERS = [
 var EDUCATION_HEADERS = ['ApplicationID', 'Level', 'Institution', 'FacultyMajor', 'GPA'];
 var WORKHISTORY_HEADERS = ['ApplicationID', 'From', 'To', 'Employer', 'Position', 'LastSalary', 'Responsibilities', 'ReasonForLeaving'];
 var EMERGENCY_HEADERS = ['ApplicationID', 'Name', 'Mobile', 'Relationship'];
-var ADDITIONAL_LANGUAGES_HEADERS = ['ApplicationID', 'Name', 'Speaking', 'Writing', 'Reading'];
+var ADDITIONAL_LANGUAGES_HEADERS = ['ApplicationID', 'Name', 'Overall'];
 var ADDITIONAL_APPS_HEADERS = ['ApplicationID', 'AppName', 'Rating'];
 var ATTACHMENTS_HEADERS = ['ApplicationID', 'DocumentType', 'FileName', 'DriveFileURL', 'MimeType', 'FileSizeBytes'];
 var POSITIONS_HEADERS = ['PositionName', 'IsOpen', 'IsSalesPC'];
@@ -85,7 +85,7 @@ function doPost(e) {
       return { ApplicationID: payload.applicationId, Name: row.name, Mobile: row.mobile, Relationship: row.relationship };
     });
     writeChildRows(ss, 'AdditionalLanguages', ADDITIONAL_LANGUAGES_HEADERS, payload.applicationId, payload.skills.languages.additional, function (row) {
-      return { ApplicationID: payload.applicationId, Name: row.name, Speaking: row.speaking, Writing: row.writing, Reading: row.reading };
+      return { ApplicationID: payload.applicationId, Name: row.name, Overall: row.overall };
     });
     writeChildRows(ss, 'AdditionalComputerApps', ADDITIONAL_APPS_HEADERS, payload.applicationId, payload.skills.computer.additionalApps, function (row) {
       return { ApplicationID: payload.applicationId, AppName: row.name, Rating: row.rating };
@@ -151,16 +151,13 @@ function writeApplicationRow(ss, p) {
     MilitaryServedYearBE: personal.military.servedYearBE,
     MilitaryNotYetYearBE: personal.military.notYetYearBE,
     MilitaryExemptOtherReason: personal.military.exemptOtherReason,
-    Lang_English_Speaking: skills.languages.english.speaking,
-    Lang_English_Writing: skills.languages.english.writing,
-    Lang_English_Reading: skills.languages.english.reading,
+    Lang_English_Overall: skills.languages.english.overall,
     Lang_English_TestResult: skills.languages.english.testResult,
     Computer_CanUse: skills.computer.canUse,
     Computer_Word_Rating: appRating(apps, 'word'),
     Computer_Excel_Rating: appRating(apps, 'excel'),
     Computer_PowerPoint_Rating: appRating(apps, 'powerpoint'),
     Computer_Canva_Rating: appRating(apps, 'canva'),
-    Computer_CapCut_Rating: appRating(apps, 'capcut'),
     Computer_ChatGPT_Rating: appRating(apps, 'chatgpt'),
     Computer_Claude_Rating: appRating(apps, 'claude'),
     Computer_Gemini_Rating: appRating(apps, 'gemini'),
