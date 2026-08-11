@@ -203,13 +203,13 @@ function renderWorkHistoryStep(state) {
         <div class="field-group"><label class="field-label">${bilingual({ th: 'ตำแหน่ง', en: 'Position' })}</label><input type="text" data-path="workHistory.${i}.position" value="${escapeHtml(row.position || '')}" /></div>
         <div class="field-group"><label class="field-label">${bilingual({ th: 'เงินเดือนสุดท้าย', en: 'Last Salary' })}</label><input type="text" data-path="workHistory.${i}.lastSalary" value="${escapeHtml(row.lastSalary || '')}" /></div>
         <div class="field-group field-full"><label class="field-label">${bilingual({ th: 'หน้าที่ความรับผิดชอบ (อย่างย่อ)', en: 'Responsibilities (brief)' })}</label><textarea rows="2" data-path="workHistory.${i}.responsibilities">${escapeHtml(row.responsibilities || '')}</textarea></div>
-        <div class="field-group field-full"><label class="field-label">${bilingual({ th: 'เหตุผลที่ออกจากงาน', en: 'Reason for Leaving' })}</label><input type="text" data-path="workHistory.${i}.reasonForLeaving" value="${escapeHtml(row.reasonForLeaving || '')}" /></div>
+        <div class="field-group field-full"><label class="field-label">${bilingual({ th: 'เหตุผลที่ลาออก/สิ้นสุดการทำงาน', en: 'Reason for Leaving' })}</label><input type="text" data-path="workHistory.${i}.reasonForLeaving" value="${escapeHtml(row.reasonForLeaving || '')}" /></div>
       </div>
       ${state.workHistory.length > 1 ? `<button type="button" class="btn-remove-row" data-remove-repeater="workHistory" data-index="${i}">${bilingual({ th: 'ลบแถว', en: 'Remove' })}</button>` : ''}
     </div>`
     )
     .join('');
-  return `<p class="step-hint">${bilingual({ th: 'เริ่มจากประสบการณ์ทำงานล่าสุดก่อน แล้วกด + เพื่อเพิ่มประสบการณ์การทำงานอื่น ๆ', en: 'Start with your most recent job, then use + to add other work experience' })}</p>
+  return `<p class="step-hint">${bilingual({ th: 'เริ่มจากประสบการณ์ล่าสุดก่อน แล้วกด + เพื่อเพิ่มประสบการณ์การทำงาน/ฝึกงานอื่น ๆ', en: 'Start with your most recent job, then use + to add other work/internship experience' })}</p>
     <div id="workHistory-rows">${rows}</div>
     <button type="button" class="btn-add-row" data-add-repeater="workHistory">${bilingual({ th: '+ เพิ่มประวัติการทำงาน', en: '+ Add Work Record' })}</button>`;
 }

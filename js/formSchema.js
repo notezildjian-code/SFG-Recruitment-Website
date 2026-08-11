@@ -132,7 +132,7 @@ const STEPS = [
   },
   {
     id: 'workHistory',
-    title: { th: '4. ประวัติการทำงาน', en: '4. Working Record' },
+    title: { th: '4. ประวัติการทำงาน/ฝึกงาน', en: '4. Working Record / Internship' },
     dynamicRepeater: 'workHistory',
   },
   {
