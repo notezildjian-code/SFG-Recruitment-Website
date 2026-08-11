@@ -1,17 +1,15 @@
 // Apps Script Web App backend for the SFG job application form.
 // Deploy: Deploy > New deployment > Web app, Execute as: Me, Who has access: Anyone.
 // First run auto-creates the Spreadsheet + Drive folder and stores their IDs in
-// Script Properties — no manual ID configuration needed. See README.md.
+// Script Properties -- no manual ID configuration needed. See README.md.
 
 var MIN_SUBMIT_MS = 3000;
 
 var APPLICATIONS_HEADERS = [
-  'ApplicationID', 'SubmittedAt', 'PositionApplying', 'ExpectedSalary', 'NameThai', 'NameEnglish', 'Nickname',
-  'Gender', 'HeightCm', 'WeightKg', 'DobBE', 'Age', 'Nationality', 'Religion', 'IdCardNo', 'HomePhone',
+  'ApplicationID', 'SubmittedAt', 'PositionApplying', 'PositionArea', 'ExpectedSalary', 'NameThai', 'NameEnglish', 'Nickname',
+  'Gender', 'HeightCm', 'WeightKg', 'DobBE', 'Age', 'IdCardNo', 'HomePhone',
   'MobilePhone', 'Email', 'LineId', 'Address', 'PostalCode',
   'MaritalStatus', 'SpouseName', 'SpouseAge', 'NumChildren',
-  'FatherName', 'FatherAge', 'FatherOccupation', 'FatherMobile',
-  'MotherName', 'MotherAge', 'MotherOccupation', 'MotherMobile',
   'MilitaryStatus', 'MilitaryServedYearBE', 'MilitaryNotYetYearBE', 'MilitaryExemptOtherReason',
   'Lang_English_Speaking', 'Lang_English_Writing', 'Lang_English_Reading', 'Lang_English_TestResult',
   'Lang_Other_Name', 'Lang_Other_Speaking', 'Lang_Other_Writing', 'Lang_Other_Reading',
@@ -37,9 +35,34 @@ var APPLICATIONS_HEADERS = [
 
 var EDUCATION_HEADERS = ['ApplicationID', 'Level', 'Institution', 'FacultyMajor', 'GPA'];
 var WORKHISTORY_HEADERS = ['ApplicationID', 'From', 'To', 'Employer', 'Position', 'LastSalary', 'ReasonForLeaving'];
-var SIBLINGS_HEADERS = ['ApplicationID', 'Name', 'Age', 'Occupation', 'Mobile'];
 var EMERGENCY_HEADERS = ['ApplicationID', 'Name', 'Mobile', 'Relationship'];
 var ATTACHMENTS_HEADERS = ['ApplicationID', 'DocumentType', 'FileName', 'DriveFileURL', 'MimeType', 'FileSizeBytes'];
+var POSITIONS_HEADERS = ['PositionName', 'IsOpen', 'IsSalesPC'];
+
+function doGet(e) {
+  var action = e.parameter.action;
+  if (action === 'positions') {
+    var ss = getSpreadsheet();
+    var sheet = ensureSheetWithHeaders(ss, 'Positions', POSITIONS_HEADERS);
+    seedPositionsIfEmpty(sheet);
+    var rows = sheet.getDataRange().getValues();
+    var positions = [];
+    for (var i = 1; i < rows.length; i++) {
+      var name = rows[i][0];
+      var isOpen = rows[i][1];
+      var isSalesPC = rows[i][2];
+      if (name && isOpen === true) positions.push({ name: name, isSalesPC: isSalesPC === true });
+    }
+    return jsonResponse({ positions: positions });
+  }
+  return jsonResponse({ ok: false, error: 'unknown_action' });
+}
+
+function seedPositionsIfEmpty(sheet) {
+  if (sheet.getLastRow() > 1) return;
+  sheet.appendRow(['พนักงานขาย (PC)', true, true]);
+  sheet.appendRow(['เจ้าหน้าที่บัญชี', true, false]);
+}
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
@@ -60,9 +83,6 @@ function doPost(e) {
     });
     writeChildRows(ss, 'WorkHistory', WORKHISTORY_HEADERS, payload.applicationId, payload.workHistory, function (row) {
       return { ApplicationID: payload.applicationId, From: row.from, To: row.to, Employer: row.employer, Position: row.position, LastSalary: row.lastSalary, ReasonForLeaving: row.reasonForLeaving };
-    });
-    writeChildRows(ss, 'Siblings', SIBLINGS_HEADERS, payload.applicationId, payload.personal.siblings, function (row) {
-      return { ApplicationID: payload.applicationId, Name: row.name, Age: row.age, Occupation: row.occupation, Mobile: row.mobile };
     });
     writeChildRows(ss, 'EmergencyContacts', EMERGENCY_HEADERS, payload.applicationId, payload.other.emergencyContacts, function (row) {
       return { ApplicationID: payload.applicationId, Name: row.name, Mobile: row.mobile, Relationship: row.relationship };
@@ -85,6 +105,7 @@ function validatePayload(payload) {
   if (!payload.applicationId) return 'missing_applicationId';
   if (!payload.personal || !payload.personal.nameThai || !payload.personal.nameEnglish) return 'missing_name';
   if (!payload.personal.idCardNo || !/^[0-9]{13}$/.test(payload.personal.idCardNo)) return 'invalid_idCardNo';
+  if (!payload.personal.positionApplying) return 'missing_position';
   if (!payload.consent || payload.consent.consentGiven !== true) return 'consent_not_given';
   return null;
 }
@@ -102,6 +123,7 @@ function writeApplicationRow(ss, p) {
     ApplicationID: p.applicationId,
     SubmittedAt: new Date(),
     PositionApplying: personal.positionApplying,
+    PositionArea: personal.positionArea,
     ExpectedSalary: personal.expectedSalary,
     NameThai: personal.nameThai,
     NameEnglish: personal.nameEnglish,
@@ -111,8 +133,6 @@ function writeApplicationRow(ss, p) {
     WeightKg: personal.weightKg,
     DobBE: personal.dobBE,
     Age: personal.age,
-    Nationality: personal.nationality,
-    Religion: personal.religion,
     IdCardNo: personal.idCardNo,
     HomePhone: personal.homePhone,
     MobilePhone: personal.mobilePhone,
@@ -124,14 +144,6 @@ function writeApplicationRow(ss, p) {
     SpouseName: personal.spouseName,
     SpouseAge: personal.spouseAge,
     NumChildren: personal.numChildren,
-    FatherName: personal.father.name,
-    FatherAge: personal.father.age,
-    FatherOccupation: personal.father.occupation,
-    FatherMobile: personal.father.mobile,
-    MotherName: personal.mother.name,
-    MotherAge: personal.mother.age,
-    MotherOccupation: personal.mother.occupation,
-    MotherMobile: personal.mother.mobile,
     MilitaryStatus: personal.military.status,
     MilitaryServedYearBE: personal.military.servedYearBE,
     MilitaryNotYetYearBE: personal.military.notYetYearBE,

@@ -14,6 +14,19 @@ function assemblePayload(state, honeypotValue) {
   };
 }
 
+async function fetchPositions() {
+  const url = window.SFG_CONFIG && window.SFG_CONFIG.APPS_SCRIPT_URL;
+  if (!url || url.includes('YOUR_DEPLOYMENT_ID')) return [];
+
+  try {
+    const response = await fetch(`${url}?action=positions`);
+    const data = await response.json();
+    return Array.isArray(data.positions) ? data.positions : [];
+  } catch (err) {
+    return [];
+  }
+}
+
 async function submitApplication(state, honeypotValue) {
   const payload = assemblePayload(state, honeypotValue);
   const url = window.SFG_CONFIG && window.SFG_CONFIG.APPS_SCRIPT_URL;

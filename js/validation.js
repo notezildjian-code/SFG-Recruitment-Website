@@ -8,6 +8,15 @@ function validateStep(step, state) {
     return { valid: errors.length === 0, errors };
   }
 
+  if (step.id === 'positionSalary') {
+    if (!state.personal.positionApplying || !state.personal.positionApplying.trim()) {
+      errors.push({ fieldId: 'positionApplying', message: { th: 'กรุณาเลือกตำแหน่งงาน', en: 'Please select a position.' } });
+    }
+    if (state.personal.positionIsSalesPC && (!state.personal.positionArea || !state.personal.positionArea.trim())) {
+      errors.push({ fieldId: 'positionArea', message: { th: 'กรุณากรอกพื้นที่หรือห้างที่สะดวก', en: 'Please specify your preferred area.' } });
+    }
+  }
+
   if (step.fields) {
     step.fields.forEach((field) => {
       if (field.condition && !field.condition(state)) return;

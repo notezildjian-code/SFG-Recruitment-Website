@@ -2,15 +2,15 @@ function createInitialState() {
   return {
     applicationId: uuid(),
     meta: { formLoadedAt: Date.now() },
+    language: null,
     consentGateAccepted: false,
+    availablePositions: [],
     personal: {
-      positionApplying: '', expectedSalary: '', nameThai: '', nameEnglish: '', nickname: '',
-      gender: '', heightCm: '', weightKg: '', dobBE: '', age: '', nationality: '', religion: '',
+      positionApplying: '', positionIsSalesPC: false, positionArea: '', expectedSalary: '',
+      nameThai: '', nameEnglish: '', nickname: '',
+      gender: '', heightCm: '', weightKg: '', dobBE: '', age: '',
       idCardNo: '', homePhone: '', mobilePhone: '', email: '', lineId: '', address: '', postalCode: '',
       maritalStatus: '', spouseName: '', spouseAge: '', numChildren: '',
-      father: { name: '', age: '', occupation: '', mobile: '' },
-      mother: { name: '', age: '', occupation: '', mobile: '' },
-      siblings: [],
       military: { status: '', servedYearBE: '', notYetYearBE: '', exemptOtherReason: '' },
     },
     education: SFGFormSchema.EDUCATION_LEVELS.map((l) => ({ level: l.value, institution: '', facultyMajor: '', gpa: '' })),
@@ -44,6 +44,9 @@ function createInitialState() {
   };
 }
 
+const LANGUAGE_STEP_INDEX = 0;
+const CONSENT_STEP_INDEX = 1;
+
 const App = {
   state: null,
   currentStep: 0,
@@ -52,7 +55,22 @@ const App = {
     const restored = findAnyDraft();
     this.state = restored || createInitialState();
     if (!this.state.meta) this.state.meta = { formLoadedAt: Date.now() };
+    if (!('availablePositions' in this.state)) this.state.availablePositions = [];
+
+    if (this.state.language) {
+      window.SFG_LANG = this.state.language;
+      this.currentStep = CONSENT_STEP_INDEX;
+    } else {
+      this.currentStep = LANGUAGE_STEP_INDEX;
+    }
+
     this.render();
+
+    fetchPositions().then((list) => {
+      this.state.availablePositions = list;
+      const step = SFGFormSchema.STEPS[this.currentStep];
+      if (step.id === 'positionSalary') this.render();
+    });
   },
 
   goToStep(index) {
@@ -74,7 +92,7 @@ const App = {
   },
 
   back() {
-    if (this.currentStep > 0) this.goToStep(this.currentStep - 1);
+    if (this.currentStep > CONSENT_STEP_INDEX) this.goToStep(this.currentStep - 1);
   },
 
   render() {
@@ -88,19 +106,52 @@ const App = {
     this.bindInputs(stepContainer);
     this.bindRepeaters(stepContainer);
     this.bindNav();
+    if (step.id === 'language') this.bindLanguageStep(stepContainer);
+    if (step.id === 'personal') this.bindAgeAutoCalc(stepContainer);
     if (step.id === 'review') this.bindReview(stepContainer);
     if (step.id === 'consentGate') this.bindConsentGate(stepContainer);
   },
 
+  bindLanguageStep(container) {
+    container.querySelectorAll('[data-lang-select]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const lang = btn.getAttribute('data-lang-select');
+        this.state.language = lang;
+        window.SFG_LANG = lang;
+        saveDraft(this.state);
+        this.goToStep(CONSENT_STEP_INDEX);
+      });
+    });
+  },
+
+  bindAgeAutoCalc(container) {
+    const dobInput = container.querySelector('[data-path="personal.dobBE"]');
+    if (!dobInput) return;
+    dobInput.addEventListener('change', () => {
+      const age = calculateAge(dobInput.value);
+      this.state.personal.age = age;
+      const ageInput = container.querySelector('[data-path="personal.age"]');
+      if (ageInput) ageInput.value = age;
+      saveDraft(this.state);
+    });
+  },
+
   bindInputs(container) {
     container.querySelectorAll('[data-path]').forEach((el) => {
-      const eventName = el.type === 'checkbox' || el.type === 'radio' ? 'change' : 'input';
+      const eventName = el.type === 'checkbox' || el.type === 'radio' || el.tagName === 'SELECT' ? 'change' : 'input';
       el.addEventListener(eventName, () => {
         const path = el.getAttribute('data-path');
         let value;
         if (el.type === 'checkbox') value = el.checked;
         else value = el.value;
         setPath(this.state, path, value);
+
+        if (el.hasAttribute('data-position-select')) {
+          const pos = (this.state.availablePositions || []).find((p) => p.name === value);
+          this.state.personal.positionIsSalesPC = !!(pos && pos.isSalesPC);
+          if (!this.state.personal.positionIsSalesPC) this.state.personal.positionArea = '';
+        }
+
         saveDraft(this.state);
         if (el.getAttribute('data-trigger') === 'true') {
           this.render();
@@ -113,7 +164,6 @@ const App = {
     container.querySelectorAll('[data-add-repeater]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const key = btn.getAttribute('data-add-repeater');
-        if (key === 'siblings') this.state.personal.siblings.push({ name: '', age: '', occupation: '', mobile: '' });
         if (key === 'workHistory') this.state.workHistory.push({ from: '', to: '', employer: '', position: '', lastSalary: '', reasonForLeaving: '' });
         if (key === 'emergencyContacts') this.state.other.emergencyContacts.push({ name: '', mobile: '', relationship: '' });
         saveDraft(this.state);
@@ -124,7 +174,6 @@ const App = {
       btn.addEventListener('click', () => {
         const key = btn.getAttribute('data-remove-repeater');
         const index = Number(btn.getAttribute('data-index'));
-        if (key === 'siblings') this.state.personal.siblings.splice(index, 1);
         if (key === 'workHistory') this.state.workHistory.splice(index, 1);
         if (key === 'emergencyContacts') this.state.other.emergencyContacts.splice(index, 1);
         saveDraft(this.state);
@@ -219,8 +268,15 @@ const App = {
   },
 
   bindNav() {
+    const step = SFGFormSchema.STEPS[this.currentStep];
     const nav = document.getElementById('nav-container');
-    const isFirst = this.currentStep === 0;
+
+    if (step.id === 'language') {
+      nav.innerHTML = '';
+      return;
+    }
+
+    const isFirst = this.currentStep <= CONSENT_STEP_INDEX;
     const isLast = this.currentStep === SFGFormSchema.STEPS.length - 1;
     nav.innerHTML = `
       ${!isFirst ? `<button type="button" id="btn-back" class="btn btn-secondary">${bilingual({ th: 'ก่อนหน้า', en: 'Back' })}</button>` : '<span></span>'}

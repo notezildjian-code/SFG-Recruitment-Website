@@ -5,6 +5,7 @@
 const TRIGGER_FIELDS = new Set([
   'personal.gender',
   'personal.maritalStatus',
+  'personal.military.status',
   'skills.computer.canUse',
   'health.illness.yn',
   'health.chronicDisease.yn',
@@ -36,11 +37,19 @@ function renderInput(field, state) {
     return `<div class="radio-group">${items}</div>`;
   }
 
+  if (field.type === 'select') {
+    const placeholder = `<option value="" disabled ${!value ? 'selected' : ''}>-- ${bilingual({ th: 'เลือก', en: 'Select' })} --</option>`;
+    const opts = field.options
+      .map((opt) => `<option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>${bilingual(opt.label)}</option>`)
+      .join('');
+    return `<select ${commonAttrs}>${placeholder}${opts}</select>`;
+  }
+
   if (field.type === 'textarea') {
     return `<textarea ${commonAttrs} rows="3">${escapeHtml(value || '')}</textarea>`;
   }
 
-  return `<input type="${field.type}" ${commonAttrs} value="${escapeHtml(value || '')}" ${field.pattern ? `pattern="${field.pattern}"` : ''} />`;
+  return `<input type="${field.type}" ${commonAttrs} value="${escapeHtml(value || '')}" ${field.pattern ? `pattern="${field.pattern}"` : ''} ${field.readonly ? 'readonly' : ''} />`;
 }
 
 function renderField(field, state) {
@@ -56,18 +65,35 @@ function renderFieldsList(fields, state) {
   return `<div class="field-grid">${fields.map((f) => renderField(f, state)).join('')}</div>`;
 }
 
+function renderLanguageStep(state) {
+  return `
+    <div class="language-picker">
+      <h2>${bilingual({ th: 'กรุณาเลือกภาษาที่ต้องการใช้งาน', en: 'Please choose your language' })}</h2>
+      <div class="language-cards">
+        <button type="button" class="language-card" data-lang-select="th">
+          <span class="language-flag">🇹🇭</span>
+          <span class="language-name">ไทย</span>
+        </button>
+        <button type="button" class="language-card" data-lang-select="en">
+          <span class="language-flag">🇺🇸</span>
+          <span class="language-name">English</span>
+        </button>
+      </div>
+    </div>`;
+}
+
 function renderConsentGate(state) {
   return `
     <div class="consent-gate">
       <h2>${bilingual({ th: 'ก่อนเริ่มกรอกใบสมัคร', en: 'Before You Begin' })}</h2>
       <p class="consent-text-th">
         บริษัท สตาร์ แฟชั่น กรุ๊ป จำกัด ("บริษัท") มีความจำเป็นต้องเก็บรวบรวม ใช้ และเปิดเผยข้อมูลส่วนบุคคลของท่าน
-        รวมถึงข้อมูลส่วนบุคคลที่มีความอ่อนไหว (เช่น เลขบัตรประชาชน ศาสนา ข้อมูลสุขภาพ และประวัติอาชญากรรม)
+        รวมถึงข้อมูลส่วนบุคคลที่มีความอ่อนไหว (เช่น เลขบัตรประชาชน ข้อมูลสุขภาพ และประวัติอาชญากรรม)
         เพื่อวัตถุประสงค์ในการพิจารณารับสมัครงานเท่านั้น ก่อนกรอกแบบฟอร์มนี้ ท่านต้องยินยอมให้บริษัทเก็บรวบรวมข้อมูลดังกล่าว
       </p>
       <p class="consent-text-en">
         Star Fashion Group Co., Ltd. ("the Company") needs to collect, use, and disclose your personal data, including
-        sensitive personal data (e.g. ID card number, religion, health information, and criminal record), solely for
+        sensitive personal data (e.g. ID card number, health information, and criminal record), solely for
         recruitment purposes. Before filling in this form, you must consent to this data collection.
       </p>
       <p><a href="privacy-policy.html" target="_blank" rel="noopener">${bilingual({ th: 'อ่านนโยบายความเป็นส่วนตัวฉบับเต็ม', en: 'Read the full Privacy Policy' })}</a></p>
@@ -79,31 +105,45 @@ function renderConsentGate(state) {
     </div>`;
 }
 
-function renderPersonalStep(state) {
-  const step = SFGFormSchema.STEPS.find((s) => s.id === 'personal');
-  const siblings = state.personal.siblings;
-  const rows = siblings
-    .map(
-      (sib, i) => `
-    <div class="repeater-row" data-repeater="siblings" data-index="${i}">
-      <div class="field-grid">
-        <div class="field-group"><label class="field-label">${bilingual({ th: 'ชื่อ', en: 'Name' })}</label><input type="text" data-path="personal.siblings.${i}.name" value="${escapeHtml(sib.name || '')}" /></div>
-        <div class="field-group"><label class="field-label">${bilingual({ th: 'อายุ', en: 'Age' })}</label><input type="number" data-path="personal.siblings.${i}.age" value="${escapeHtml(sib.age || '')}" /></div>
-        <div class="field-group"><label class="field-label">${bilingual({ th: 'อาชีพ (หากมี)', en: 'Occupation (If any)' })}</label><input type="text" data-path="personal.siblings.${i}.occupation" value="${escapeHtml(sib.occupation || '')}" /></div>
-        <div class="field-group"><label class="field-label">${bilingual({ th: 'เบอร์โทรศัพท์มือถือ', en: 'Mobile Phone No.' })}</label><input type="tel" data-path="personal.siblings.${i}.mobile" value="${escapeHtml(sib.mobile || '')}" /></div>
-      </div>
-      <button type="button" class="btn-remove-row" data-remove-repeater="siblings" data-index="${i}">${bilingual({ th: 'ลบแถว', en: 'Remove' })}</button>
-    </div>`
-    )
-    .join('');
+function renderPositionSalaryStep(state) {
+  const step = SFGFormSchema.STEPS.find((s) => s.id === 'positionSalary');
+  const positions = state.availablePositions || [];
+  const selectedName = state.personal.positionApplying || '';
+
+  let positionField;
+  if (positions.length > 0) {
+    const placeholder = `<option value="" disabled ${!selectedName ? 'selected' : ''}>-- ${bilingual({ th: 'เลือกตำแหน่ง', en: 'Select position' })} --</option>`;
+    const opts = positions
+      .map((p) => `<option value="${escapeHtml(p.name)}" ${p.name === selectedName ? 'selected' : ''}>${escapeHtml(p.name)}</option>`)
+      .join('');
+    positionField = `<select data-position-select="true" data-path="personal.positionApplying" data-trigger="true">${placeholder}${opts}</select>`;
+  } else {
+    positionField = `<input type="text" data-path="personal.positionApplying" value="${escapeHtml(selectedName)}" />`;
+  }
+
+  const areaField = state.personal.positionIsSalesPC
+    ? `<div class="field-group field-full" data-field-id="positionArea">
+        <label class="field-label">${bilingual({ th: 'พื้นที่หรือห้างสรรพสินค้าที่สะดวกเดินทางไปทำงาน', en: 'Preferred area or department store branch' })}<span class="required-mark">*</span></label>
+        <input type="text" data-path="personal.positionArea" value="${escapeHtml(state.personal.positionArea || '')}" />
+        <div class="field-error" data-error-for="positionArea"></div>
+      </div>`
+    : '';
 
   return `
-    ${renderFieldsList(step.fields, state)}
-    <div class="subsection">
-      <h3>${bilingual({ th: 'ชื่อพี่น้องในครอบครัว (หากมี)', en: 'Siblings (If any)' })}</h3>
-      <div id="siblings-rows">${rows}</div>
-      <button type="button" class="btn-add-row" data-add-repeater="siblings">${bilingual({ th: '+ เพิ่มพี่น้อง', en: '+ Add Sibling' })}</button>
-    </div>`;
+    <div class="field-grid">
+      <div class="field-group field-full" data-field-id="positionApplying">
+        <label class="field-label">${bilingual({ th: 'ตำแหน่งงานที่ต้องการสมัคร', en: 'Position Applied For' })}<span class="required-mark">*</span></label>
+        ${positionField}
+        <div class="field-error" data-error-for="positionApplying"></div>
+      </div>
+      ${areaField}
+    </div>
+    ${renderFieldsList(step.fields, state)}`;
+}
+
+function renderPersonalStep(state) {
+  const step = SFGFormSchema.STEPS.find((s) => s.id === 'personal');
+  return renderFieldsList(step.fields, state);
 }
 
 function renderEducationStep(state) {
@@ -257,24 +297,30 @@ function renderReviewStep(state) {
 
   return `
     <div class="review-section">
-      <h3>${bilingual({ th: '1. ประวัติส่วนตัว', en: '1. Personal Data' })}</h3>
+      <h3>${bilingual({ th: '1. ตำแหน่งงานที่ต้องการสมัคร', en: '1. Position Applied For' })}</h3>
       ${reviewRow({ th: 'ตำแหน่งที่สมัคร', en: 'Position' }, p.positionApplying)}
+      ${reviewRow({ th: 'เงินเดือนที่ต้องการ', en: 'Expected Salary' }, p.expectedSalary)}
+      ${reviewRow({ th: 'พื้นที่/ห้างที่สะดวก', en: 'Preferred Area' }, p.positionArea)}
+    </div>
+    <div class="review-section">
+      <h3>${bilingual({ th: '2. ข้อมูลส่วนตัว', en: '2. Personal Data' })}</h3>
       ${reviewRow({ th: 'ชื่อ (ไทย)', en: 'Name (TH)' }, p.nameThai)}
       ${reviewRow({ th: 'ชื่อ (อังกฤษ)', en: 'Name (EN)' }, p.nameEnglish)}
       ${reviewRow({ th: 'เพศ', en: 'Gender' }, p.gender)}
       ${reviewRow({ th: 'วันเกิด', en: 'DOB' }, p.dobBE)}
+      ${reviewRow({ th: 'อายุ', en: 'Age' }, p.age)}
       ${reviewRow({ th: 'เลขบัตรประชาชน', en: 'ID Card No.' }, p.idCardNo)}
       ${reviewRow({ th: 'มือถือ', en: 'Mobile' }, p.mobilePhone)}
       ${reviewRow({ th: 'อีเมล', en: 'Email' }, p.email)}
     </div>
     <div class="review-section">
-      <h3>${bilingual({ th: '2-6. ข้อมูลอื่น ๆ', en: '2-6. Other Sections' })}</h3>
+      <h3>${bilingual({ th: '3-7. ข้อมูลอื่น ๆ', en: '3-7. Other Sections' })}</h3>
       <p class="step-hint">${bilingual({ th: 'ระดับการศึกษา ประวัติการทำงาน ทักษะ สุขภาพ และข้อมูลอื่น ๆ ที่กรอกไว้จะถูกส่งไปพร้อมใบสมัครนี้', en: 'Education, work history, skills, health, and other information you entered will be submitted with this application.' })}</p>
     </div>
     <div class="review-section consent-final">
-      <h3>${bilingual({ th: '7. การยินยอมเปิดเผยและให้ข้อมูลส่วนตัว', en: '7. Disclosure of Personal Information' })}</h3>
-      <p class="consent-text-th">ในการสมัครงานครั้งนี้ ข้าพเจ้ายินยอมเปิดเผยและให้ข้อมูลส่วนตัว อาทิเช่น ข้อมูลส่วนบุคคล ข้อมูลครอบครัว การศึกษา ประวัติการทำงาน สุขภาพอนามัย ตลอดจนข้อมูลอื่น ๆ ให้กับบริษัท เพื่อใช้ในการติดต่อกับข้าพเจ้า หรือเพื่อพิจารณาในการสมัครงาน หรือเพื่อประโยชน์โดยชอบด้วยกฎหมาย หรือเพื่อปฏิบัติตามกฎหมาย หรือข้อยกเว้นตามกฎหมาย ไม่ว่าตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล หรือกฎหมายใด โดยข้าพเจ้าได้แนบเอกสารที่เกี่ยวข้อง ดังนี้</p>
-      <p class="consent-text-en">To applying for this job, I agree to disclose and provide personal information such as personal information, family information, educational background, working record, health and other information to the company for use in contacting, for consideration a job, for comply with the Personal Data Protection Act or any other laws. I have attached the following relevant documents:</p>
+      <h3>${bilingual({ th: '8. การยินยอมเปิดเผยและให้ข้อมูลส่วนตัว', en: '8. Disclosure of Personal Information' })}</h3>
+      <p class="consent-text-th">ในการสมัครงานครั้งนี้ ข้าพเจ้ายินยอมเปิดเผยและให้ข้อมูลส่วนตัว อาทิเช่น ข้อมูลส่วนบุคคล การศึกษา ประวัติการทำงาน สุขภาพอนามัย ตลอดจนข้อมูลอื่น ๆ ให้กับบริษัท เพื่อใช้ในการติดต่อกับข้าพเจ้า หรือเพื่อพิจารณาในการสมัครงาน หรือเพื่อประโยชน์โดยชอบด้วยกฎหมาย หรือเพื่อปฏิบัติตามกฎหมาย หรือข้อยกเว้นตามกฎหมาย ไม่ว่าตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล หรือกฎหมายใด โดยข้าพเจ้าได้แนบเอกสารที่เกี่ยวข้อง ดังนี้</p>
+      <p class="consent-text-en">To applying for this job, I agree to disclose and provide personal information such as personal information, educational background, working record, health and other information to the company for use in contacting, for consideration a job, for comply with the Personal Data Protection Act or any other laws. I have attached the following relevant documents:</p>
       <div class="doc-checklist">${docChecklist}</div>
       <p class="certification-text">"I hereby certify that all the information and documents in this application are CORRECT and TRUE. I am aware that if any information is found to be false by intention, I agree be justified and immediately dismissed without any warning and/or compensation."</p>
       <div class="field-group field-full">
@@ -297,8 +343,12 @@ function renderReviewStep(state) {
 
 function renderStepBody(step, state) {
   switch (step.id) {
+    case 'language':
+      return renderLanguageStep(state);
     case 'consentGate':
       return renderConsentGate(state);
+    case 'positionSalary':
+      return renderPositionSalaryStep(state);
     case 'personal':
       return renderPersonalStep(state);
     case 'education':
@@ -320,15 +370,18 @@ function renderStepBody(step, state) {
 
 function renderProgressBar(currentIndex) {
   const steps = SFGFormSchema.STEPS;
-  return `<div class="progress-bar">
-    ${steps
-      .map((s, i) => {
-        let cls = 'progress-step';
-        if (i < currentIndex) cls += ' done';
-        if (i === currentIndex) cls += ' active';
-        return `<div class="${cls}"><span class="progress-dot">${i + 1}</span></div>`;
-      })
-      .join('')}
-  </div>
-  <div class="progress-caption">${bilingual(steps[currentIndex].title)} (${currentIndex + 1}/${steps.length})</div>`;
+  const step = steps[currentIndex];
+
+  if (step.id === 'language') return '';
+
+  if (step.id === 'consentGate') {
+    return `<div class="progress-caption">${bilingual(step.title)}</div>`;
+  }
+
+  const numberedIds = SFGFormSchema.NUMBERED_STEP_IDS;
+  const numberedIndex = numberedIds.indexOf(step.id);
+  const percent = Math.round(((numberedIndex + 1) / numberedIds.length) * 100);
+
+  return `<div class="progress-bar-track"><div class="progress-bar-fill" style="width:${percent}%"></div></div>
+  <div class="progress-caption">${bilingual(step.title)} &middot; ${percent}%</div>`;
 }

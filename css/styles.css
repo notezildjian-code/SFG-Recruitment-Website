@@ -71,29 +71,26 @@ body {
 /* Progress bar */
 .progress-container { margin-bottom: 20px; }
 
-.progress-bar {
-  display: flex;
-  gap: 4px;
-}
-
-.progress-step {
-  flex: 1;
-  height: 6px;
+.progress-bar-track {
+  height: 8px;
   border-radius: 4px;
   background: var(--border);
+  overflow: hidden;
 }
 
-.progress-step.done { background: var(--jupiter-orange); }
-.progress-step.active { background: var(--neptune-blue); }
+.progress-bar-fill {
+  height: 100%;
+  background: var(--jupiter-orange);
+  border-radius: 4px;
+  transition: width 0.25s ease;
+}
 
 .progress-caption {
   margin-top: 10px;
   font-size: 14px;
-  color: var(--muted);
+  font-weight: 600;
+  color: var(--neptune-blue);
 }
-
-.progress-caption .label-th { font-weight: 600; color: var(--neptune-blue); }
-.progress-caption .label-en { display: block; font-size: 12px; }
 
 /* Step card */
 .step-card {
@@ -110,18 +107,12 @@ body {
   font-size: 20px;
 }
 
-.step-title .label-en { display: none; }
-
 .step-hint {
   color: var(--muted);
   font-size: 14px;
   margin-top: -8px;
   margin-bottom: 16px;
 }
-
-/* Bilingual labels */
-.label-th { display: block; }
-.label-en { display: block; font-size: 12px; color: var(--muted); font-family: var(--font-en); }
 
 /* Field grid */
 .field-grid {
@@ -137,7 +128,7 @@ body {
 .required-mark { color: var(--jupiter-orange); margin-left: 4px; }
 
 input[type="text"], input[type="tel"], input[type="email"], input[type="number"],
-input[type="date"], textarea {
+input[type="date"], textarea, select {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -148,13 +139,13 @@ input[type="date"], textarea {
   color: var(--ink);
 }
 
-input:focus, textarea:focus {
+input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--neptune-blue);
   box-shadow: 0 0 0 3px rgba(38, 76, 158, 0.12);
 }
 
-input[disabled] { background: var(--bg); color: var(--muted); }
+input[disabled], input[readonly] { background: var(--bg); color: var(--muted); }
 
 .field-error {
   font-size: 12px;
@@ -183,6 +174,34 @@ input[disabled] { background: var(--bg); color: var(--muted); }
 
 .checkbox-inline { display: flex; align-items: center; gap: 8px; font-size: 14px; }
 .checkbox-inline input { accent-color: var(--neptune-blue); }
+
+/* Language picker */
+.language-picker { text-align: center; padding: 20px 0; }
+.language-picker h2 { color: var(--neptune-blue); font-size: 20px; margin-bottom: 24px; }
+
+.language-cards {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.language-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 160px;
+  padding: 24px 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  cursor: pointer;
+}
+
+.language-card:hover { border-color: var(--neptune-blue); background: rgba(38, 76, 158, 0.06); }
+.language-flag { font-size: 40px; line-height: 1; }
+.language-name { font-size: 16px; font-weight: 600; color: var(--ink); }
 
 /* Consent gate */
 .consent-gate h2 { color: var(--neptune-blue); font-family: var(--font-en); }
@@ -342,6 +361,7 @@ input[disabled] { background: var(--bg); color: var(--muted); }
     --card-bg: #1b1e2b;
   }
   input[type="text"], input[type="tel"], input[type="email"], input[type="number"],
-  input[type="date"], textarea { background: #232637; color: var(--ink); }
+  input[type="date"], textarea, select { background: #232637; color: var(--ink); }
+  input[readonly] { background: #1b1e2b; }
   .error-banner { background: rgba(214, 73, 29, 0.15); }
 }

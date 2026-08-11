@@ -32,6 +32,22 @@ function uuid() {
   });
 }
 
+// Single active language, chosen on the language-select step. Defaults to Thai until chosen.
+window.SFG_LANG = window.SFG_LANG || 'th';
+
 function bilingual(label) {
-  return `<span class="label-th">${escapeHtml(label.th)}</span><span class="label-en">${escapeHtml(label.en)}</span>`;
+  const lang = window.SFG_LANG === 'en' ? 'en' : 'th';
+  const text = label[lang] != null ? label[lang] : label.th;
+  return escapeHtml(text);
+}
+
+function calculateAge(dateStr) {
+  if (!dateStr) return '';
+  const dob = new Date(dateStr);
+  if (isNaN(dob.getTime())) return '';
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) age--;
+  return age >= 0 ? String(age) : '';
 }

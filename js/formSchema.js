@@ -40,10 +40,10 @@ const MARITAL_OPTIONS = [
   { value: 'separated', label: { th: 'แยกกันอยู่', en: 'Separated' } },
 ];
 
+// exempt_female removed — the military step itself is now hidden entirely for female applicants.
 const MILITARY_OPTIONS = [
-  { value: 'exempt_female', label: { th: 'ได้รับการยกเว้น เนื่องจากเป็นเพศหญิง', en: 'Exempted, because I am female.' } },
-  { value: 'not_yet', label: { th: 'ยังไม่ได้เกณฑ์ จะเกณฑ์ในปี (พ.ศ.)', en: 'Not yet, when (B.E.)' }, hasYear: true },
   { value: 'served', label: { th: 'ผ่านการเกณฑ์แล้ว เมื่อปี (พ.ศ.)', en: 'Served, when (B.E.)' }, hasYear: true },
+  { value: 'not_yet', label: { th: 'ยังไม่ได้เกณฑ์ จะเกณฑ์ในปี (พ.ศ.)', en: 'Not yet, when (B.E.)' }, hasYear: true },
   { value: 'exempt_other', label: { th: 'ได้รับการยกเว้น เพราะ', en: 'Exempted, because' }, hasReason: true },
 ];
 
@@ -60,30 +60,43 @@ const YES_NO_OPTIONS = [
   { value: 'yes', label: { th: 'เคย / มี', en: 'Yes' } },
 ];
 
+// Steps counted toward the progress bar's percentage. 'language' and 'consentGate' are
+// gating screens shown before this numbered flow and are excluded from the percentage.
+const NUMBERED_STEP_IDS = ['positionSalary', 'personal', 'education', 'workHistory', 'skills', 'health', 'other', 'review'];
+
 const STEPS = [
+  {
+    id: 'language',
+    title: { th: 'เลือกภาษา', en: 'Choose Language' },
+  },
   {
     id: 'consentGate',
     title: { th: 'ความยินยอมเปิดเผยข้อมูลส่วนบุคคล', en: 'Personal Data Consent' },
   },
   {
-    id: 'personal',
-    title: { th: '1. ประวัติส่วนตัว', en: '1. Personal Data' },
+    id: 'positionSalary',
+    title: { th: '1. ตำแหน่งงานที่ต้องการสมัคร', en: '1. Position Applied For' },
+    // position select + conditional area field are custom-rendered (dynamic position list from the backend) — see render.js.
     fields: [
-      { id: 'positionApplying', path: 'personal.positionApplying', label: { th: 'ตำแหน่งที่สมัคร', en: 'Position applying for' }, type: 'text', required: true },
       { id: 'expectedSalary', path: 'personal.expectedSalary', label: { th: 'เงินเดือนที่ต้องการ (บาท)', en: 'Expected Salary (Baht)' }, type: 'text', required: true },
+    ],
+  },
+  {
+    id: 'personal',
+    title: { th: '2. ข้อมูลส่วนตัว', en: '2. Personal Data' },
+    fields: [
       { id: 'nameThai', path: 'personal.nameThai', label: { th: 'ชื่อ-นามสกุล (ภาษาไทย)', en: 'Name (In Thai)' }, type: 'text', required: true },
       { id: 'nameEnglish', path: 'personal.nameEnglish', label: { th: 'ชื่อ-นามสกุล (ภาษาอังกฤษ)', en: 'Name (In English)' }, type: 'text', required: true },
       { id: 'nickname', path: 'personal.nickname', label: { th: 'ชื่อเล่น', en: 'Nickname' }, type: 'text' },
       { id: 'gender', path: 'personal.gender', label: { th: 'เพศ', en: 'Gender' }, type: 'radio', required: true, options: [
         { value: 'M', label: { th: 'ชาย', en: 'Male' } },
         { value: 'F', label: { th: 'หญิง', en: 'Female' } },
+        { value: 'LGBTQ+', label: { th: 'LGBTQ+', en: 'LGBTQ+' } },
       ] },
       { id: 'heightCm', path: 'personal.heightCm', label: { th: 'ส่วนสูง (ซม.)', en: 'Height (CM)' }, type: 'number' },
       { id: 'weightKg', path: 'personal.weightKg', label: { th: 'น้ำหนัก (กก.)', en: 'Weight (KG)' }, type: 'number' },
-      { id: 'dobBE', path: 'personal.dobBE', label: { th: 'วัน/เดือน/ปีเกิด (พ.ศ.)', en: 'Date of Birth (B.E.)' }, type: 'date', required: true },
-      { id: 'age', path: 'personal.age', label: { th: 'อายุ', en: 'Age' }, type: 'number', required: true },
-      { id: 'nationality', path: 'personal.nationality', label: { th: 'สัญชาติ', en: 'Nationality' }, type: 'text', required: true },
-      { id: 'religion', path: 'personal.religion', label: { th: 'ศาสนา', en: 'Religion' }, type: 'text' },
+      { id: 'dobBE', path: 'personal.dobBE', label: { th: 'วัน/เดือน/ปีเกิด', en: 'Date of Birth' }, type: 'date', required: true },
+      { id: 'age', path: 'personal.age', label: { th: 'อายุ', en: 'Age' }, type: 'text', readonly: true },
       { id: 'idCardNo', path: 'personal.idCardNo', label: { th: 'เลขที่บัตรประชาชน', en: 'Identity Card No.' }, type: 'text', required: true, pattern: '^[0-9]{13}$', patternError: { th: 'กรอกเลขบัตรประชาชน 13 หลัก', en: 'Enter a 13-digit ID card number' } },
       { id: 'homePhone', path: 'personal.homePhone', label: { th: 'เบอร์โทรศัพท์ (ที่บ้าน)', en: 'Telephone No. (Home)' }, type: 'tel' },
       { id: 'mobilePhone', path: 'personal.mobilePhone', label: { th: 'เบอร์โทรศัพท์มือถือ', en: 'Mobile Phone No.' }, type: 'tel', required: true },
@@ -91,34 +104,29 @@ const STEPS = [
       { id: 'lineId', path: 'personal.lineId', label: { th: 'ไลน์ ไอดี', en: 'Line ID' }, type: 'text' },
       { id: 'address', path: 'personal.address', label: { th: 'ที่อยู่ปัจจุบัน', en: 'Current Address' }, type: 'textarea', required: true, colSpan: 'full' },
       { id: 'postalCode', path: 'personal.postalCode', label: { th: 'รหัสไปรษณีย์', en: 'Post / Zip' }, type: 'text' },
-      { id: 'maritalStatus', path: 'personal.maritalStatus', label: { th: 'สถานภาพการสมรส', en: 'Marital Status' }, type: 'radio', required: true, options: MARITAL_OPTIONS, colSpan: 'full' },
+      { id: 'maritalStatus', path: 'personal.maritalStatus', label: { th: 'สถานภาพการสมรส', en: 'Marital Status' }, type: 'select', required: true, options: MARITAL_OPTIONS, colSpan: 'full' },
       { id: 'spouseName', path: 'personal.spouseName', label: { th: 'ชื่อคู่สมรส', en: "Spouse's Name" }, type: 'text', condition: (s) => ['married_registered', 'married_not_registered'].includes(s.personal.maritalStatus) },
       { id: 'spouseAge', path: 'personal.spouseAge', label: { th: 'อายุคู่สมรส', en: 'Spouse Age' }, type: 'number', condition: (s) => ['married_registered', 'married_not_registered'].includes(s.personal.maritalStatus) },
       { id: 'numChildren', path: 'personal.numChildren', label: { th: 'จำนวนบุตร (หากมี)', en: 'No. of Children (If any)' }, type: 'number', condition: (s) => ['married_registered', 'married_not_registered'].includes(s.personal.maritalStatus) },
-      { id: 'fatherName', path: 'personal.father.name', label: { th: 'ชื่อบิดา', en: "Father's Name" }, type: 'text' },
-      { id: 'fatherAge', path: 'personal.father.age', label: { th: 'อายุบิดา', en: 'Father Age' }, type: 'number' },
-      { id: 'fatherOccupation', path: 'personal.father.occupation', label: { th: 'อาชีพบิดา', en: "Father's Occupation" }, type: 'text' },
-      { id: 'fatherMobile', path: 'personal.father.mobile', label: { th: 'เบอร์โทรศัพท์มือถือบิดา', en: "Father's Mobile" }, type: 'tel' },
-      { id: 'motherName', path: 'personal.mother.name', label: { th: 'ชื่อมารดา', en: "Mother's Name" }, type: 'text' },
-      { id: 'motherAge', path: 'personal.mother.age', label: { th: 'อายุมารดา', en: 'Mother Age' }, type: 'number' },
-      { id: 'motherOccupation', path: 'personal.mother.occupation', label: { th: 'อาชีพมารดา', en: "Mother's Occupation" }, type: 'text' },
-      { id: 'motherMobile', path: 'personal.mother.mobile', label: { th: 'เบอร์โทรศัพท์มือถือมารดา', en: "Mother's Mobile" }, type: 'tel' },
       { id: 'military', path: 'personal.military.status', label: { th: 'การรับราชการทหาร', en: 'Military Services' }, type: 'radio', options: MILITARY_OPTIONS, condition: (s) => s.personal.gender === 'M', colSpan: 'full' },
+      { id: 'militaryServedYearBE', path: 'personal.military.servedYearBE', label: { th: 'ปีที่ผ่านการเกณฑ์ (พ.ศ.)', en: 'Year served (B.E.)' }, type: 'text', condition: (s) => s.personal.gender === 'M' && s.personal.military.status === 'served', colSpan: 'full' },
+      { id: 'militaryNotYetYearBE', path: 'personal.military.notYetYearBE', label: { th: 'ปีที่จะเกณฑ์ (พ.ศ.)', en: 'Year to be conscripted (B.E.)' }, type: 'text', condition: (s) => s.personal.gender === 'M' && s.personal.military.status === 'not_yet', colSpan: 'full' },
+      { id: 'militaryExemptOtherReason', path: 'personal.military.exemptOtherReason', label: { th: 'โปรดระบุเหตุผลที่ได้รับการยกเว้น', en: 'Please specify the reason for exemption' }, type: 'text', condition: (s) => s.personal.gender === 'M' && s.personal.military.status === 'exempt_other', colSpan: 'full' },
     ],
   },
   {
     id: 'education',
-    title: { th: '2. วุฒิการศึกษา', en: '2. Educational Background' },
+    title: { th: '3. วุฒิการศึกษา', en: '3. Educational Background' },
     fixedRepeater: 'education',
   },
   {
     id: 'workHistory',
-    title: { th: '3. ประวัติการทำงาน', en: '3. Working Record' },
+    title: { th: '4. ประวัติการทำงาน', en: '4. Working Record' },
     dynamicRepeater: 'workHistory',
   },
   {
     id: 'skills',
-    title: { th: '4. ทักษะและความสามารถ', en: '4. Skills & Abilities' },
+    title: { th: '5. ทักษะและความสามารถ', en: '5. Skills & Abilities' },
     fields: [
       { id: 'otherLanguageName', path: 'skills.languages.other.name', label: { th: 'ภาษาอื่น ๆ (โปรดระบุ)', en: 'Other Language (Please specify)' }, type: 'text' },
       { id: 'canUseComputer', path: 'skills.computer.canUse', label: { th: 'ความสามารถในการใช้คอมพิวเตอร์', en: 'Computer Abilities' }, type: 'radio', options: [
@@ -130,7 +138,7 @@ const STEPS = [
   },
   {
     id: 'health',
-    title: { th: '5. สุขภาพอนามัย', en: '5. Health' },
+    title: { th: '6. สุขภาพอนามัย', en: '6. Health' },
     fields: [
       { id: 'illnessYn', path: 'health.illness.yn', label: { th: 'ท่านเคยเจ็บป่วย หรือเป็นโรคร้ายแรงหรือไม่', en: 'Do you have any personal illness, contagious, infectious disease?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },
       { id: 'illnessSpecify', path: 'health.illness.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', condition: (s) => s.health.illness.yn === 'yes', colSpan: 'full' },
@@ -144,7 +152,7 @@ const STEPS = [
   },
   {
     id: 'other',
-    title: { th: '6. รายละเอียดอื่น ๆ', en: '6. Other Information' },
+    title: { th: '7. รายละเอียดอื่น ๆ', en: '7. Other Information' },
     fields: [
       { id: 'sourceOfPosting', path: 'other.sourceOfPosting', label: { th: 'ท่านทราบว่ามีตำแหน่งงานว่างจากที่ใด', en: 'Where did you find the information about this position?' }, type: 'text', colSpan: 'full' },
       { id: 'referredBy', path: 'other.referredBy', label: { th: 'โปรดระบุชื่อบุคคลที่แนะนำท่านมาสมัครงาน (หากมี)', en: 'Who did you suggest you to apply for this position? (If any)' }, type: 'text', colSpan: 'full' },
@@ -160,12 +168,13 @@ const STEPS = [
   },
   {
     id: 'review',
-    title: { th: '7. ตรวจสอบและยืนยันข้อมูล', en: '7. Review & Submit' },
+    title: { th: '8. ตรวจสอบและยืนยันข้อมูล', en: '8. Review & Submit' },
   },
 ];
 
 window.SFGFormSchema = {
   STEPS,
+  NUMBERED_STEP_IDS,
   EDUCATION_LEVELS,
   COMPUTER_APPS,
   DOCUMENT_CHECKLIST_ITEMS,
