@@ -17,9 +17,14 @@ const COMPUTER_APPS = [
   { value: 'word', label: { th: 'Word', en: 'Word' } },
   { value: 'excel', label: { th: 'Excel', en: 'Excel' } },
   { value: 'powerpoint', label: { th: 'PowerPoint', en: 'PowerPoint' } },
-  { value: 'illustrator', label: { th: 'Illustrator', en: 'Illustrator' } },
-  { value: 'photoshop', label: { th: 'Photoshop', en: 'Photoshop' } },
+  { value: 'canva', label: { th: 'Canva', en: 'Canva' } },
+  { value: 'capcut', label: { th: 'CapCut', en: 'CapCut' } },
+  { value: 'chatgpt', label: { th: 'ChatGPT', en: 'ChatGPT' } },
+  { value: 'claude', label: { th: 'Claude', en: 'Claude' } },
+  { value: 'gemini', label: { th: 'Gemini', en: 'Gemini' } },
 ];
+
+const RATING_LEGEND = { th: '(ดีมาก<--------->แย่)', en: '(Excellent<--------->Poor)' };
 
 const DOCUMENT_CHECKLIST_ITEMS = [
   { value: 'photo', label: { th: 'รูปถ่าย', en: 'Photo' } },
@@ -33,6 +38,12 @@ const DOCUMENT_CHECKLIST_ITEMS = [
   { value: 'others', label: { th: 'อื่น ๆ (โปรดระบุ)', en: 'Others (Please specify)' } },
 ];
 
+const NAME_PREFIX_OPTIONS = [
+  { value: 'mr', label: { th: 'นาย', en: 'Mr.' } },
+  { value: 'mrs', label: { th: 'นาง', en: 'Mrs.' } },
+  { value: 'miss', label: { th: 'นางสาว', en: 'Miss' } },
+];
+
 const MARITAL_OPTIONS = [
   { value: 'single', label: { th: 'โสด', en: 'Single' } },
   { value: 'married_registered', label: { th: 'สมรสจดทะเบียน', en: 'Married' } },
@@ -44,8 +55,8 @@ const MARITAL_OPTIONS = [
 
 // exempt_female removed — the military step itself is now hidden entirely for female applicants.
 const MILITARY_OPTIONS = [
-  { value: 'served', label: { th: 'ผ่านการเกณฑ์แล้ว เมื่อปี (พ.ศ.)', en: 'Served, when (B.E.)' }, hasYear: true },
-  { value: 'not_yet', label: { th: 'ยังไม่ได้เกณฑ์ จะเกณฑ์ในปี (พ.ศ.)', en: 'Not yet, when (B.E.)' }, hasYear: true },
+  { value: 'served', label: { th: 'ผ่านการเกณฑ์แล้ว เมื่อปี (พ.ศ.)', en: 'Served, when (A.D.)' }, hasYear: true },
+  { value: 'not_yet', label: { th: 'ยังไม่ได้เกณฑ์ จะเกณฑ์ในปี (พ.ศ.)', en: 'Not yet, when (A.D.)' }, hasYear: true },
   { value: 'exempt_black_card', label: { th: 'ได้รับการยกเว้น เพราะจับได้ใบดำ', en: 'Exempted, drew the black draft card' } },
   { value: 'exempt_other', label: { th: 'ได้รับการยกเว้น เพราะ', en: 'Exempted, because' }, hasReason: true },
 ];
@@ -88,6 +99,7 @@ const STEPS = [
     id: 'personal',
     title: { th: '2. ข้อมูลส่วนตัว', en: '2. Personal Data' },
     fields: [
+      { id: 'namePrefix', path: 'personal.namePrefix', label: { th: 'คำนำหน้า', en: 'Title' }, type: 'select', required: true, options: NAME_PREFIX_OPTIONS },
       { id: 'nameThai', path: 'personal.nameThai', label: { th: 'ชื่อ-นามสกุล (ภาษาไทย)', en: 'Name (In Thai)' }, type: 'text', required: true },
       { id: 'nameEnglish', path: 'personal.nameEnglish', label: { th: 'ชื่อ-นามสกุล (ภาษาอังกฤษ)', en: 'Name (In English)' }, type: 'text', required: true },
       { id: 'nickname', path: 'personal.nickname', label: { th: 'ชื่อเล่น', en: 'Nickname' }, type: 'text' },
@@ -103,16 +115,16 @@ const STEPS = [
       { id: 'idCardNo', path: 'personal.idCardNo', label: { th: 'เลขที่บัตรประชาชน', en: 'Identity Card No.' }, type: 'text', required: true, pattern: '^[0-9]{13}$', patternError: { th: 'กรอกเลขบัตรประชาชน 13 หลัก', en: 'Enter a 13-digit ID card number' } },
       { id: 'mobilePhone', path: 'personal.mobilePhone', label: { th: 'เบอร์โทรศัพท์มือถือ', en: 'Mobile Phone No.' }, type: 'tel', required: true },
       { id: 'email', path: 'personal.email', label: { th: 'อีเมล', en: 'Email' }, type: 'email', required: true },
-      { id: 'lineId', path: 'personal.lineId', label: { th: 'ไลน์ ไอดี', en: 'Line ID' }, type: 'text' },
+      { id: 'lineId', path: 'personal.lineId', label: { th: 'ไลน์ ไอดี', en: 'Line ID' }, type: 'text', required: true },
       { id: 'address', path: 'personal.address', label: { th: 'ที่อยู่ปัจจุบัน', en: 'Current Address' }, type: 'textarea', required: true, colSpan: 'full' },
       { id: 'postalCode', path: 'personal.postalCode', label: { th: 'รหัสไปรษณีย์', en: 'Post / Zip' }, type: 'text', required: true },
       { id: 'maritalStatus', path: 'personal.maritalStatus', label: { th: 'สถานภาพการสมรส', en: 'Marital Status' }, type: 'select', required: true, options: MARITAL_OPTIONS, colSpan: 'full' },
       { id: 'spouseName', path: 'personal.spouseName', label: { th: 'ชื่อคู่สมรส', en: "Spouse's Name" }, type: 'text', condition: (s) => ['married_registered', 'married_not_registered'].includes(s.personal.maritalStatus) },
       { id: 'spouseAge', path: 'personal.spouseAge', label: { th: 'อายุคู่สมรส', en: 'Spouse Age' }, type: 'number', condition: (s) => ['married_registered', 'married_not_registered'].includes(s.personal.maritalStatus) },
       { id: 'numChildren', path: 'personal.numChildren', label: { th: 'จำนวนบุตร (หากมี)', en: 'No. of Children (If any)' }, type: 'number', condition: (s) => ['married_registered', 'married_not_registered'].includes(s.personal.maritalStatus) },
-      { id: 'military', path: 'personal.military.status', label: { th: 'การรับราชการทหาร', en: 'Military Services' }, type: 'select', options: MILITARY_OPTIONS, condition: (s) => s.personal.gender === 'M', colSpan: 'full' },
-      { id: 'militaryServedYearBE', path: 'personal.military.servedYearBE', label: { th: 'ปีที่ผ่านการเกณฑ์ (พ.ศ.)', en: 'Year served (B.E.)' }, type: 'text', condition: (s) => s.personal.gender === 'M' && s.personal.military.status === 'served', colSpan: 'full' },
-      { id: 'militaryNotYetYearBE', path: 'personal.military.notYetYearBE', label: { th: 'ปีที่จะเกณฑ์ (พ.ศ.)', en: 'Year to be conscripted (B.E.)' }, type: 'text', condition: (s) => s.personal.gender === 'M' && s.personal.military.status === 'not_yet', colSpan: 'full' },
+      { id: 'military', path: 'personal.military.status', label: { th: 'การรับราชการทหาร', en: 'Military Services' }, type: 'select', required: true, options: MILITARY_OPTIONS, condition: (s) => s.personal.gender === 'M', colSpan: 'full' },
+      { id: 'militaryServedYearBE', path: 'personal.military.servedYearBE', label: { th: 'ปีที่ผ่านการเกณฑ์ (พ.ศ.)', en: 'Year served (A.D.)' }, type: 'text', condition: (s) => s.personal.gender === 'M' && s.personal.military.status === 'served', colSpan: 'full' },
+      { id: 'militaryNotYetYearBE', path: 'personal.military.notYetYearBE', label: { th: 'ปีที่จะเกณฑ์ (พ.ศ.)', en: 'Year to be conscripted (A.D.)' }, type: 'text', condition: (s) => s.personal.gender === 'M' && s.personal.military.status === 'not_yet', colSpan: 'full' },
       { id: 'militaryExemptOtherReason', path: 'personal.military.exemptOtherReason', label: { th: 'โปรดระบุเหตุผลที่ได้รับการยกเว้น', en: 'Please specify the reason for exemption' }, type: 'text', condition: (s) => s.personal.gender === 'M' && s.personal.military.status === 'exempt_other', colSpan: 'full' },
     ],
   },
@@ -130,12 +142,10 @@ const STEPS = [
     id: 'skills',
     title: { th: '5. ทักษะและความสามารถ', en: '5. Skills & Abilities' },
     fields: [
-      { id: 'otherLanguageName', path: 'skills.languages.other.name', label: { th: 'ภาษาอื่น ๆ (โปรดระบุ)', en: 'Other Language (Please specify)' }, type: 'text' },
       { id: 'canUseComputer', path: 'skills.computer.canUse', label: { th: 'ความสามารถในการใช้คอมพิวเตอร์', en: 'Computer Abilities' }, type: 'radio', options: [
         { value: 'yes', label: { th: 'ใช้เป็น', en: 'Yes' } },
         { value: 'no', label: { th: 'ใช้ไม่เป็น', en: 'No' } },
       ], colSpan: 'full' },
-      { id: 'otherSkills', path: 'skills.otherSkills', label: { th: 'ทักษะและความสามารถอื่น ๆ (โปรดระบุ)', en: 'Other Skills & Abilities (Please specify)' }, type: 'textarea', colSpan: 'full' },
     ],
   },
   {
@@ -180,8 +190,10 @@ window.SFGFormSchema = {
   EDUCATION_LEVELS,
   COMPUTER_APPS,
   DOCUMENT_CHECKLIST_ITEMS,
+  NAME_PREFIX_OPTIONS,
   MARITAL_OPTIONS,
   MILITARY_OPTIONS,
   RATING_OPTIONS,
+  RATING_LEGEND,
   YES_NO_OPTIONS,
 };

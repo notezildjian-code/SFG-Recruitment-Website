@@ -186,7 +186,7 @@ function renderEducationStep(state) {
     </div>`
     )
     .join('');
-  return `<p class="step-hint">${bilingual({ th: 'กรอกเริ่มจากวุฒิการศึกษาสูงสุดก่อน แล้วกด + เพื่อเพิ่มวุฒิรองลงมา', en: 'Start with your highest qualification, then use + to add earlier ones' })}</p>
+  return `<p class="step-hint">${bilingual({ th: 'เริ่มจากวุฒิการศึกษาสูงสุดก่อน แล้วกด + เพื่อเพิ่มวุฒิการศึกษาระดับอื่น ๆ', en: 'Start with your highest qualification, then use + to add other education levels' })}</p>
     <div id="education-rows">${rows}</div>
     <button type="button" class="btn-add-row" data-add-repeater="education">${bilingual({ th: '+ เพิ่มวุฒิการศึกษา', en: '+ Add Education' })}</button>`;
 }
@@ -209,7 +209,7 @@ function renderWorkHistoryStep(state) {
     </div>`
     )
     .join('');
-  return `<p class="step-hint">${bilingual({ th: 'กรอกเริ่มจากประสบการณ์ทำงานล่าสุดก่อน แล้วกด + เพื่อเพิ่มประสบการณ์ก่อนหน้า', en: 'Start with your most recent job, then use + to add earlier ones' })}</p>
+  return `<p class="step-hint">${bilingual({ th: 'เริ่มจากประสบการณ์ทำงานล่าสุดก่อน แล้วกด + เพื่อเพิ่มประสบการณ์การทำงานอื่น ๆ', en: 'Start with your most recent job, then use + to add other work experience' })}</p>
     <div id="workHistory-rows">${rows}</div>
     <button type="button" class="btn-add-row" data-add-repeater="workHistory">${bilingual({ th: '+ เพิ่มประวัติการทำงาน', en: '+ Add Work Record' })}</button>`;
 }
@@ -223,16 +223,34 @@ function renderRatingRadios(path, value) {
   ).join('');
 }
 
+function ratingColumnHeader(label) {
+  return `<th>${bilingual(label)}<br><small class="rating-legend">${bilingual(SFGFormSchema.RATING_LEGEND)}</small></th>`;
+}
+
 function renderSkillsStep(state) {
   const step = SFGFormSchema.STEPS.find((s) => s.id === 'skills');
   const lang = state.skills.languages;
-  const langRows = `
+  const additionalLangRows = (lang.additional || [])
+    .map(
+      (row, i) => `
+      <tr data-repeater="additionalLanguages" data-index="${i}">
+        <td><input type="text" placeholder="${escapeHtml(bilingualPlain({ th: 'ชื่อภาษา', en: 'Language name' }))}" data-path="skills.languages.additional.${i}.name" value="${escapeHtml(row.name || '')}" /></td>
+        <td><div class="rating-group">${renderRatingRadios(`skills.languages.additional.${i}.speaking`, row.speaking)}</div></td>
+        <td><div class="rating-group">${renderRatingRadios(`skills.languages.additional.${i}.writing`, row.writing)}</div></td>
+        <td><div class="rating-group">${renderRatingRadios(`skills.languages.additional.${i}.reading`, row.reading)}</div></td>
+        <td><button type="button" class="btn-remove-row" data-remove-repeater="additionalLanguages" data-index="${i}">${bilingual({ th: 'ลบ', en: 'Remove' })}</button></td>
+      </tr>`
+    )
+    .join('');
+
+  const langTable = `
     <table class="skills-table">
       <thead><tr>
         <th>${bilingual({ th: 'ภาษา', en: 'Language' })}</th>
-        <th>${bilingual({ th: 'พูด', en: 'Speaking' })}</th>
-        <th>${bilingual({ th: 'เขียน', en: 'Writing' })}</th>
-        <th>${bilingual({ th: 'อ่าน', en: 'Reading' })}</th>
+        ${ratingColumnHeader({ th: 'พูด', en: 'Speaking' })}
+        ${ratingColumnHeader({ th: 'เขียน', en: 'Writing' })}
+        ${ratingColumnHeader({ th: 'อ่าน', en: 'Reading' })}
+        <th></th>
       </tr></thead>
       <tbody>
         <tr>
@@ -240,37 +258,46 @@ function renderSkillsStep(state) {
           <td><div class="rating-group">${renderRatingRadios('skills.languages.english.speaking', lang.english.speaking)}</div></td>
           <td><div class="rating-group">${renderRatingRadios('skills.languages.english.writing', lang.english.writing)}</div></td>
           <td><div class="rating-group">${renderRatingRadios('skills.languages.english.reading', lang.english.reading)}</div></td>
+          <td></td>
         </tr>
-        <tr>
-          <td>${bilingual({ th: 'ภาษาอื่น ๆ', en: 'Other' })}</td>
-          <td><div class="rating-group">${renderRatingRadios('skills.languages.other.speaking', lang.other.speaking)}</div></td>
-          <td><div class="rating-group">${renderRatingRadios('skills.languages.other.writing', lang.other.writing)}</div></td>
-          <td><div class="rating-group">${renderRatingRadios('skills.languages.other.reading', lang.other.reading)}</div></td>
-        </tr>
+        ${additionalLangRows}
       </tbody>
-    </table>`;
+    </table>
+    <button type="button" class="btn-add-row" data-add-repeater="additionalLanguages">${bilingual({ th: '+ เพิ่มภาษา', en: '+ Add Language' })}</button>`;
 
   const canUseComputer = state.skills.computer.canUse === 'yes';
-  const appsRows = canUseComputer
-    ? `<div class="subsection"><h3>${bilingual({ th: 'โปรแกรมที่ใช้เป็น', en: 'Applications You Can Use' })}</h3>
+  const additionalAppRows = (state.skills.computer.additionalApps || [])
+    .map(
+      (row, i) => `
+      <div class="computer-app-row" data-repeater="additionalApps" data-index="${i}">
+        <input type="text" class="app-note" placeholder="${escapeHtml(bilingualPlain({ th: 'ชื่อโปรแกรม', en: 'Application name' }))}" data-path="skills.computer.additionalApps.${i}.name" value="${escapeHtml(row.name || '')}" />
+        <div class="rating-group">${renderRatingRadios(`skills.computer.additionalApps.${i}.rating`, row.rating)}</div>
+        <button type="button" class="btn-remove-row" data-remove-repeater="additionalApps" data-index="${i}">${bilingual({ th: 'ลบ', en: 'Remove' })}</button>
+      </div>`
+    )
+    .join('');
+
+  const appsSection = canUseComputer
+    ? `<div class="subsection">
+      <h3>${bilingual({ th: 'ความสามารถในการใช้งานคอมพิวเตอร์', en: 'Computer Application Skills' })} <small class="rating-legend">${bilingual(SFGFormSchema.RATING_LEGEND)}</small></h3>
       <div class="computer-apps-list">
       ${SFGFormSchema.COMPUTER_APPS.map((app) => {
         const appState = state.skills.computer.apps[app.value];
         return `<div class="computer-app-row">
-          <label class="checkbox-inline">
-            <input type="checkbox" data-path="skills.computer.apps.${app.value}.used" ${appState.used ? 'checked' : ''} />
-            <span>${bilingual(app.label)}</span>
-          </label>
-          <input type="text" class="app-note" placeholder="Note" data-path="skills.computer.apps.${app.value}.note" value="${escapeHtml(appState.note || '')}" />
+          <span class="computer-app-name">${bilingual(app.label)}</span>
+          <div class="rating-group">${renderRatingRadios(`skills.computer.apps.${app.value}.rating`, appState.rating)}</div>
         </div>`;
       }).join('')}
-      </div></div>`
+      ${additionalAppRows}
+      </div>
+      <button type="button" class="btn-add-row" data-add-repeater="additionalApps">${bilingual({ th: '+ เพิ่มโปรแกรม', en: '+ Add Application' })}</button>
+      </div>`
     : '';
 
   return `
-    <div class="subsection"><h3>${bilingual({ th: 'ความสามารถทางภาษา', en: 'Language Abilities' })}</h3>${langRows}</div>
+    <div class="subsection"><h3>${bilingual({ th: 'ความสามารถทางภาษา', en: 'Language Abilities' })}</h3>${langTable}</div>
     ${renderFieldsList(step.fields, state)}
-    ${appsRows}`;
+    ${appsSection}`;
 }
 
 function renderHealthStep(state) {

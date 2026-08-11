@@ -7,7 +7,7 @@ function createInitialState() {
     availablePositions: [],
     personal: {
       positionApplying: '', positionIsSalesPC: false, positionArea: '', expectedSalary: '',
-      nameThai: '', nameEnglish: '', nickname: '',
+      namePrefix: '', nameThai: '', nameEnglish: '', nickname: '',
       gender: '', heightCm: '', weightKg: '', dobBE: '', age: '',
       idCardNo: '', mobilePhone: '', email: '', lineId: '', address: '', postalCode: '',
       maritalStatus: '', spouseName: '', spouseAge: '', numChildren: '',
@@ -18,13 +18,13 @@ function createInitialState() {
     skills: {
       languages: {
         english: { speaking: '', writing: '', reading: '', testResult: '' },
-        other: { name: '', speaking: '', writing: '', reading: '' },
+        additional: [],
       },
       computer: {
         canUse: '',
-        apps: Object.fromEntries(SFGFormSchema.COMPUTER_APPS.map((a) => [a.value, { used: false, note: '' }])),
+        apps: Object.fromEntries(SFGFormSchema.COMPUTER_APPS.map((a) => [a.value, { rating: '' }])),
+        additionalApps: [],
       },
-      otherSkills: '',
     },
     health: {
       illness: { yn: '', specify: '' },
@@ -168,6 +168,8 @@ const App = {
         if (key === 'education') this.state.education.push({ level: '', institution: '', facultyMajor: '', gpa: '' });
         if (key === 'workHistory') this.state.workHistory.push({ from: '', to: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' });
         if (key === 'emergencyContacts') this.state.other.emergencyContacts.push({ name: '', mobile: '', relationship: '' });
+        if (key === 'additionalLanguages') this.state.skills.languages.additional.push({ name: '', speaking: '', writing: '', reading: '' });
+        if (key === 'additionalApps') this.state.skills.computer.additionalApps.push({ name: '', rating: '' });
         saveDraft(this.state);
         this.render();
       });
@@ -179,6 +181,8 @@ const App = {
         if (key === 'education') this.state.education.splice(index, 1);
         if (key === 'workHistory') this.state.workHistory.splice(index, 1);
         if (key === 'emergencyContacts') this.state.other.emergencyContacts.splice(index, 1);
+        if (key === 'additionalLanguages') this.state.skills.languages.additional.splice(index, 1);
+        if (key === 'additionalApps') this.state.skills.computer.additionalApps.splice(index, 1);
         saveDraft(this.state);
         this.render();
       });

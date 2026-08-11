@@ -36,9 +36,14 @@ function uuid() {
 window.SFG_LANG = window.SFG_LANG || 'th';
 
 function bilingual(label) {
+  return escapeHtml(bilingualPlain(label));
+}
+
+// Raw (unescaped) text in the active language — for callers that need to
+// escape it themselves (e.g. inside an already-escaped attribute value).
+function bilingualPlain(label) {
   const lang = window.SFG_LANG === 'en' ? 'en' : 'th';
-  const text = label[lang] != null ? label[lang] : label.th;
-  return escapeHtml(text);
+  return label[lang] != null ? label[lang] : label.th;
 }
 
 function calculateAge(dateStr) {

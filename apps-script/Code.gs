@@ -6,20 +6,15 @@
 var MIN_SUBMIT_MS = 3000;
 
 var APPLICATIONS_HEADERS = [
-  'ApplicationID', 'SubmittedAt', 'PositionApplying', 'PositionArea', 'ExpectedSalary', 'NameThai', 'NameEnglish', 'Nickname',
+  'ApplicationID', 'SubmittedAt', 'PositionApplying', 'PositionArea', 'ExpectedSalary', 'NamePrefix', 'NameThai', 'NameEnglish', 'Nickname',
   'Gender', 'HeightCm', 'WeightKg', 'DobBE', 'Age', 'IdCardNo',
   'MobilePhone', 'Email', 'LineId', 'Address', 'PostalCode',
   'MaritalStatus', 'SpouseName', 'SpouseAge', 'NumChildren',
   'MilitaryStatus', 'MilitaryServedYearBE', 'MilitaryNotYetYearBE', 'MilitaryExemptOtherReason',
   'Lang_English_Speaking', 'Lang_English_Writing', 'Lang_English_Reading', 'Lang_English_TestResult',
-  'Lang_Other_Name', 'Lang_Other_Speaking', 'Lang_Other_Writing', 'Lang_Other_Reading',
   'Computer_CanUse',
-  'Computer_Word_Used', 'Computer_Word_Note',
-  'Computer_Excel_Used', 'Computer_Excel_Note',
-  'Computer_PowerPoint_Used', 'Computer_PowerPoint_Note',
-  'Computer_Illustrator_Used', 'Computer_Illustrator_Note',
-  'Computer_Photoshop_Used', 'Computer_Photoshop_Note',
-  'OtherSkills',
+  'Computer_Word_Rating', 'Computer_Excel_Rating', 'Computer_PowerPoint_Rating',
+  'Computer_Canva_Rating', 'Computer_CapCut_Rating', 'Computer_ChatGPT_Rating', 'Computer_Claude_Rating', 'Computer_Gemini_Rating',
   'Health_Illness_YN', 'Health_Illness_Specify',
   'Health_Chronic_YN', 'Health_Chronic_Specify',
   'Health_Disability_YN', 'Health_Disability_Specify',
@@ -36,6 +31,8 @@ var APPLICATIONS_HEADERS = [
 var EDUCATION_HEADERS = ['ApplicationID', 'Level', 'Institution', 'FacultyMajor', 'GPA'];
 var WORKHISTORY_HEADERS = ['ApplicationID', 'From', 'To', 'Employer', 'Position', 'LastSalary', 'Responsibilities', 'ReasonForLeaving'];
 var EMERGENCY_HEADERS = ['ApplicationID', 'Name', 'Mobile', 'Relationship'];
+var ADDITIONAL_LANGUAGES_HEADERS = ['ApplicationID', 'Name', 'Speaking', 'Writing', 'Reading'];
+var ADDITIONAL_APPS_HEADERS = ['ApplicationID', 'AppName', 'Rating'];
 var ATTACHMENTS_HEADERS = ['ApplicationID', 'DocumentType', 'FileName', 'DriveFileURL', 'MimeType', 'FileSizeBytes'];
 var POSITIONS_HEADERS = ['PositionName', 'IsOpen', 'IsSalesPC'];
 
@@ -87,6 +84,12 @@ function doPost(e) {
     writeChildRows(ss, 'EmergencyContacts', EMERGENCY_HEADERS, payload.applicationId, payload.other.emergencyContacts, function (row) {
       return { ApplicationID: payload.applicationId, Name: row.name, Mobile: row.mobile, Relationship: row.relationship };
     });
+    writeChildRows(ss, 'AdditionalLanguages', ADDITIONAL_LANGUAGES_HEADERS, payload.applicationId, payload.skills.languages.additional, function (row) {
+      return { ApplicationID: payload.applicationId, Name: row.name, Speaking: row.speaking, Writing: row.writing, Reading: row.reading };
+    });
+    writeChildRows(ss, 'AdditionalComputerApps', ADDITIONAL_APPS_HEADERS, payload.applicationId, payload.skills.computer.additionalApps, function (row) {
+      return { ApplicationID: payload.applicationId, AppName: row.name, Rating: row.rating };
+    });
 
     if (payload.attachments && payload.attachments.length) {
       saveAttachments(ss, payload.applicationId, payload.attachments);
@@ -125,6 +128,7 @@ function writeApplicationRow(ss, p) {
     PositionApplying: personal.positionApplying,
     PositionArea: personal.positionArea,
     ExpectedSalary: personal.expectedSalary,
+    NamePrefix: personal.namePrefix,
     NameThai: personal.nameThai,
     NameEnglish: personal.nameEnglish,
     Nickname: personal.nickname,
@@ -151,22 +155,15 @@ function writeApplicationRow(ss, p) {
     Lang_English_Writing: skills.languages.english.writing,
     Lang_English_Reading: skills.languages.english.reading,
     Lang_English_TestResult: skills.languages.english.testResult,
-    Lang_Other_Name: skills.languages.other.name,
-    Lang_Other_Speaking: skills.languages.other.speaking,
-    Lang_Other_Writing: skills.languages.other.writing,
-    Lang_Other_Reading: skills.languages.other.reading,
     Computer_CanUse: skills.computer.canUse,
-    Computer_Word_Used: appUsed(apps, 'word'),
-    Computer_Word_Note: appNote(apps, 'word'),
-    Computer_Excel_Used: appUsed(apps, 'excel'),
-    Computer_Excel_Note: appNote(apps, 'excel'),
-    Computer_PowerPoint_Used: appUsed(apps, 'powerpoint'),
-    Computer_PowerPoint_Note: appNote(apps, 'powerpoint'),
-    Computer_Illustrator_Used: appUsed(apps, 'illustrator'),
-    Computer_Illustrator_Note: appNote(apps, 'illustrator'),
-    Computer_Photoshop_Used: appUsed(apps, 'photoshop'),
-    Computer_Photoshop_Note: appNote(apps, 'photoshop'),
-    OtherSkills: skills.otherSkills,
+    Computer_Word_Rating: appRating(apps, 'word'),
+    Computer_Excel_Rating: appRating(apps, 'excel'),
+    Computer_PowerPoint_Rating: appRating(apps, 'powerpoint'),
+    Computer_Canva_Rating: appRating(apps, 'canva'),
+    Computer_CapCut_Rating: appRating(apps, 'capcut'),
+    Computer_ChatGPT_Rating: appRating(apps, 'chatgpt'),
+    Computer_Claude_Rating: appRating(apps, 'claude'),
+    Computer_Gemini_Rating: appRating(apps, 'gemini'),
     Health_Illness_YN: health.illness.yn,
     Health_Illness_Specify: health.illness.specify,
     Health_Chronic_YN: health.chronicDisease.yn,
@@ -200,8 +197,7 @@ function writeApplicationRow(ss, p) {
   sheet.appendRow(APPLICATIONS_HEADERS.map(function (h) { return rowObj[h] !== undefined ? rowObj[h] : ''; }));
 }
 
-function appUsed(apps, key) { return apps[key] ? apps[key].used : false; }
-function appNote(apps, key) { return apps[key] ? apps[key].note : ''; }
+function appRating(apps, key) { return apps[key] ? apps[key].rating : ''; }
 function hasDoc(consent, key) { return consent.documentsAttached && consent.documentsAttached.indexOf(key) !== -1; }
 
 function writeChildRows(ss, sheetName, headers, applicationId, rows, mapFn) {
