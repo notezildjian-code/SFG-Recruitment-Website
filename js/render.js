@@ -65,17 +65,34 @@ function renderFieldsList(fields, state) {
   return `<div class="field-grid">${fields.map((f) => renderField(f, state)).join('')}</div>`;
 }
 
+const FLAG_TH_SVG = `<svg class="language-flag" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+  <rect width="60" height="40" fill="#fff"/>
+  <rect y="0" width="60" height="6.67" fill="#a51931"/>
+  <rect y="6.67" width="60" height="6.66" fill="#fff"/>
+  <rect y="13.33" width="60" height="13.34" fill="#2d2a4a"/>
+  <rect y="26.67" width="60" height="6.66" fill="#fff"/>
+  <rect y="33.33" width="60" height="6.67" fill="#a51931"/>
+</svg>`;
+
+const FLAG_UK_SVG = `<svg class="language-flag" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+  <rect width="60" height="40" fill="#00247d"/>
+  <path d="M0,0 L60,40 M60,0 L0,40" stroke="#fff" stroke-width="8"/>
+  <path d="M0,0 L60,40 M60,0 L0,40" stroke="#cf142b" stroke-width="3"/>
+  <path d="M30,0 V40 M0,20 H60" stroke="#fff" stroke-width="13"/>
+  <path d="M30,0 V40 M0,20 H60" stroke="#cf142b" stroke-width="8"/>
+</svg>`;
+
 function renderLanguageStep(state) {
   return `
     <div class="language-picker">
       <h2>${bilingual({ th: 'กรุณาเลือกภาษาที่ต้องการใช้งาน', en: 'Please choose your language' })}</h2>
       <div class="language-cards">
         <button type="button" class="language-card" data-lang-select="th">
-          <span class="language-flag">🇹🇭</span>
+          ${FLAG_TH_SVG}
           <span class="language-name">ไทย</span>
         </button>
         <button type="button" class="language-card" data-lang-select="en">
-          <span class="language-flag">🇺🇸</span>
+          ${FLAG_UK_SVG}
           <span class="language-name">English</span>
         </button>
       </div>

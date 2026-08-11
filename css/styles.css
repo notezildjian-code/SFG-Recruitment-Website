@@ -200,7 +200,7 @@ input[disabled], input[readonly] { background: var(--bg); color: var(--muted); }
 }
 
 .language-card:hover { border-color: var(--neptune-blue); background: rgba(38, 76, 158, 0.06); }
-.language-flag { font-size: 40px; line-height: 1; }
+.language-flag { width: 64px; height: auto; border-radius: 4px; box-shadow: 0 0 0 1px rgba(0,0,0,0.1); }
 .language-name { font-size: 16px; font-weight: 600; color: var(--ink); }
 
 /* Consent gate */

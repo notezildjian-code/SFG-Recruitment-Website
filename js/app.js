@@ -99,8 +99,9 @@ const App = {
     const step = SFGFormSchema.STEPS[this.currentStep];
     document.getElementById('progress-container').innerHTML = renderProgressBar(this.currentStep);
     const stepContainer = document.getElementById('step-container');
+    const stepTitle = step.id === 'language' ? '' : `<h2 class="step-title">${bilingual(step.title)}</h2>`;
     stepContainer.innerHTML = `<div class="step-card">
-      <h2 class="step-title">${bilingual(step.title)}</h2>
+      ${stepTitle}
       ${renderStepBody(step, this.state)}
     </div>`;
     this.bindInputs(stepContainer);
