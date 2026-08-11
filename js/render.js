@@ -95,6 +95,31 @@ function renderDobInputs(state) {
   </div>`;
 }
 
+// Same idea as renderDobInputs but month/year only (no day) -- used for work history
+// from/to fields, which only need month-level precision.
+function renderMonthYearSelect(monthPath, yearPath, monthValue, yearValue, disabled) {
+  const lang = window.SFG_LANG === 'en' ? 'en' : 'th';
+  const placeholder = (label) => `<option value="" disabled selected>-- ${bilingual(label)} --</option>`;
+
+  const monthOptions = MONTH_NAMES[lang]
+    .map((name, i) => `<option value="${i + 1}" ${String(i + 1) === String(monthValue) ? 'selected' : ''}>${name}</option>`)
+    .join('');
+
+  const currentAdYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 61 }, (_, i) => currentAdYear - i)
+    .map((adYear) => {
+      const displayYear = lang === 'th' ? adYear + 543 : adYear;
+      return `<option value="${displayYear}" ${String(displayYear) === String(yearValue) ? 'selected' : ''}>${displayYear}</option>`;
+    })
+    .join('');
+
+  const disabledAttr = disabled ? 'disabled' : '';
+  return `<div class="dob-select-group month-year-select-group">
+    <select data-path="${monthPath}" data-trigger="false" ${disabledAttr}>${placeholder({ th: 'เดือน', en: 'Month' })}${monthOptions}</select>
+    <select data-path="${yearPath}" data-trigger="false" ${disabledAttr}>${placeholder({ th: lang === 'th' ? 'ปี (พ.ศ.)' : 'Year (A.D.)', en: 'Year (A.D.)' })}${yearOptions}</select>
+  </div>`;
+}
+
 function renderField(field, state) {
   if (field.condition && !field.condition(state)) return '';
   return `<div class="${fieldWrapperClass(field)}" data-field-id="${field.id}">
@@ -240,13 +265,14 @@ function renderWorkHistoryStep(state) {
       (row, i) => `
     <div class="repeater-row" data-repeater="workHistory" data-index="${i}">
       <div class="field-grid">
-        <div class="field-group"><label class="field-label">${bilingual({ th: 'จากเดือน/ปี (พ.ศ.)', en: 'From (Month/Year)' })}</label><input type="text" placeholder="MM/YYYY" data-path="workHistory.${i}.from" value="${escapeHtml(row.from || '')}" /></div>
         <div class="field-group">
-          <label class="field-label">${bilingual({ th: 'ถึงเดือน/ปี (พ.ศ.)', en: 'To (Month/Year)' })}</label>
-          <div class="input-with-checkbox">
-            <input type="text" placeholder="MM/YYYY" data-path="workHistory.${i}.to" value="${escapeHtml(row.to || '')}" ${row.isCurrent ? 'disabled' : ''} />
-            <label class="checkbox-inline"><input type="checkbox" data-path="workHistory.${i}.isCurrent" ${row.isCurrent ? 'checked' : ''} />${bilingual({ th: 'ถึงปัจจุบัน', en: 'Present' })}</label>
-          </div>
+          <label class="field-label">${bilingual({ th: 'จากเดือน/ปี', en: 'From (Month/Year)' })}</label>
+          ${renderMonthYearSelect(`workHistory.${i}.fromMonth`, `workHistory.${i}.fromYear`, row.fromMonth, row.fromYear, false)}
+        </div>
+        <div class="field-group">
+          <label class="field-label">${bilingual({ th: 'ถึงเดือน/ปี', en: 'To (Month/Year)' })}</label>
+          ${renderMonthYearSelect(`workHistory.${i}.toMonth`, `workHistory.${i}.toYear`, row.toMonth, row.toYear, row.isCurrent)}
+          <label class="checkbox-inline"><input type="checkbox" data-path="workHistory.${i}.isCurrent" ${row.isCurrent ? 'checked' : ''} />${bilingual({ th: 'ถึงปัจจุบัน', en: 'Present' })}</label>
         </div>
         <div class="field-group"><label class="field-label">${bilingual({ th: 'อายุงาน', en: 'Duration' })}</label><input type="text" data-path="workHistory.${i}.duration" value="${escapeHtml(row.duration || '')}" readonly /></div>
         <div class="field-group field-full"><label class="field-label">${bilingual({ th: 'ชื่อนายจ้าง / บริษัท', en: "Employer's Name" })}</label><input type="text" data-path="workHistory.${i}.employer" value="${escapeHtml(row.employer || '')}" /></div>

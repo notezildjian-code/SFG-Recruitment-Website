@@ -128,6 +128,7 @@ body {
 .required-mark { color: var(--jupiter-orange); margin-left: 4px; }
 
 .dob-select-group { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 8px; }
+.dob-select-group.month-year-select-group { grid-template-columns: 1.4fr 1fr; }
 
 input[type="text"], input[type="tel"], input[type="email"], input[type="number"],
 input[type="date"], textarea, select {
@@ -245,9 +246,7 @@ input[disabled], input[readonly] { background: var(--bg); color: var(--muted); }
 .education-row { display: flex; flex-direction: column; gap: 8px; }
 .edu-level-label { font-weight: 600; font-size: 14px; color: var(--neptune-blue); }
 
-.input-with-checkbox { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.input-with-checkbox input[type="text"] { flex: 1; min-width: 100px; }
-.input-with-checkbox .checkbox-inline { white-space: nowrap; }
+.month-year-select-group { margin-bottom: 8px; }
 
 .btn-add-row, .btn-remove-row {
   border: 1px dashed var(--neptune-blue);

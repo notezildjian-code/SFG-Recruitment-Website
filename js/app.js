@@ -1,7 +1,7 @@
 // Bumped whenever the state shape changes in a backwards-incompatible way.
 // A saved draft from an older version is discarded on load instead of crashing
 // against fields it no longer has (or fields it has that got renamed/removed).
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 8;
 
 function createInitialState() {
   return {
@@ -20,7 +20,7 @@ function createInitialState() {
       military: { status: '', servedYearBE: '', notYetYearBE: '', exemptOtherReason: '' },
     },
     education: [{ level: '', institution: '', facultyMajor: '', gpa: '' }],
-    workHistory: [{ from: '', to: '', isCurrent: false, duration: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' }],
+    workHistory: [{ from: '', to: '', fromMonth: '', fromYear: '', toMonth: '', toYear: '', isCurrent: false, duration: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' }],
     skills: {
       languages: {
         english: { overall: '', testResult: '' },
@@ -177,29 +177,29 @@ const App = {
     container.querySelectorAll('[data-repeater="workHistory"]').forEach((row) => {
       const index = Number(row.getAttribute('data-index'));
       const entry = this.state.workHistory[index];
-      const fromInput = row.querySelector(`[data-path="workHistory.${index}.from"]`);
-      const toInput = row.querySelector(`[data-path="workHistory.${index}.to"]`);
+      const fromMonthInput = row.querySelector(`[data-path="workHistory.${index}.fromMonth"]`);
+      const fromYearInput = row.querySelector(`[data-path="workHistory.${index}.fromYear"]`);
+      const toMonthInput = row.querySelector(`[data-path="workHistory.${index}.toMonth"]`);
+      const toYearInput = row.querySelector(`[data-path="workHistory.${index}.toYear"]`);
       const currentCheckbox = row.querySelector(`[data-path="workHistory.${index}.isCurrent"]`);
       const durationInput = row.querySelector(`[data-path="workHistory.${index}.duration"]`);
 
       const recalc = () => {
+        entry.from = composeMonthYear(entry.fromMonth, entry.fromYear);
+        entry.to = entry.isCurrent ? '' : composeMonthYear(entry.toMonth, entry.toYear);
         entry.duration = calculateWorkDuration(entry.from, entry.to, entry.isCurrent);
         if (durationInput) durationInput.value = entry.duration;
         saveDraft(this.state);
       };
 
-      if (fromInput) fromInput.addEventListener('change', recalc);
-      if (toInput) toInput.addEventListener('change', recalc);
+      [fromMonthInput, fromYearInput, toMonthInput, toYearInput].forEach((el) => {
+        if (el) el.addEventListener('change', recalc);
+      });
       if (currentCheckbox) {
         currentCheckbox.addEventListener('change', () => {
           entry.isCurrent = currentCheckbox.checked;
-          if (toInput) {
-            toInput.disabled = entry.isCurrent;
-            if (entry.isCurrent) {
-              entry.to = '';
-              toInput.value = '';
-            }
-          }
+          if (toMonthInput) toMonthInput.disabled = entry.isCurrent;
+          if (toYearInput) toYearInput.disabled = entry.isCurrent;
           recalc();
         });
       }
@@ -235,7 +235,7 @@ const App = {
       btn.addEventListener('click', () => {
         const key = btn.getAttribute('data-add-repeater');
         if (key === 'education') this.state.education.push({ level: '', institution: '', facultyMajor: '', gpa: '' });
-        if (key === 'workHistory') this.state.workHistory.push({ from: '', to: '', isCurrent: false, duration: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' });
+        if (key === 'workHistory') this.state.workHistory.push({ from: '', to: '', fromMonth: '', fromYear: '', toMonth: '', toYear: '', isCurrent: false, duration: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' });
         if (key === 'emergencyContacts') this.state.other.emergencyContacts.push({ name: '', mobile: '', relationship: '' });
         if (key === 'additionalLanguages') this.state.skills.languages.additional.push({ name: '', overall: '' });
         if (key === 'additionalApps') this.state.skills.computer.additionalApps.push({ name: '', rating: '' });

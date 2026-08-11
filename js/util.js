@@ -58,6 +58,15 @@ function composeDobISO(day, month, yearDisplay) {
   return `${adYear}-${mm}-${dd}`;
 }
 
+// Same era-conversion idea as composeDobISO, but returns "MM/YYYY" (always AD) since
+// that's the format calculateWorkDuration()'s parser expects.
+function composeMonthYear(month, yearDisplay) {
+  if (!month || !yearDisplay) return '';
+  const lang = window.SFG_LANG === 'en' ? 'en' : 'th';
+  const adYear = lang === 'th' ? Number(yearDisplay) - 543 : Number(yearDisplay);
+  return `${String(month).padStart(2, '0')}/${adYear}`;
+}
+
 function calculateAge(dateStr) {
   if (!dateStr) return '';
   const dob = new Date(dateStr);
