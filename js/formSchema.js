@@ -76,10 +76,11 @@ const PREGNANT_YES_NO_OPTIONS = [
   { value: 'yes', label: { th: 'ใช่', en: 'Yes' } },
 ];
 
-const PREGNANCY_MONTH_OPTIONS = Array.from({ length: 8 }, (_, i) => ({
-  value: String(i + 1),
-  label: { th: `${i + 1} เดือน`, en: `${i + 1} month${i + 1 > 1 ? 's' : ''}` },
-}));
+const PREGNANCY_MONTH_OPTIONS = [
+  { value: '1-3', label: { th: '1-3 เดือน', en: '1-3 months' } },
+  { value: '4-6', label: { th: '4-6 เดือน', en: '4-6 months' } },
+  { value: '7-9', label: { th: '7-9 เดือน', en: '7-9 months' } },
+];
 
 // Steps counted toward the progress bar's percentage. 'language' and 'consentGate' are
 // gating screens shown before this numbered flow and are excluded from the percentage.
@@ -166,7 +167,7 @@ const STEPS = [
       { id: 'disabilityYn', path: 'health.disability.yn', label: { th: 'ท่านมีความบกพร่อง หรือมีความพิการทางร่างกายหรือไม่', en: 'Do you have physical disabilities or handicap?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },
       { id: 'disabilitySpecify', path: 'health.disability.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', condition: (s) => s.health.disability.yn === 'yes', colSpan: 'full' },
       { id: 'pregnantYn', path: 'health.pregnant.yn', label: { th: 'ท่านกำลังตั้งครรภ์หรือไม่', en: 'Are you pregnant?' }, type: 'radio', required: true, options: PREGNANT_YES_NO_OPTIONS, condition: (s) => s.personal.gender === 'F', colSpan: 'full' },
-      { id: 'pregnantSpecify', path: 'health.pregnant.specify', label: { th: 'อายุครรภ์ (เดือน)', en: 'Pregnancy duration (months)' }, type: 'select', options: PREGNANCY_MONTH_OPTIONS, condition: (s) => s.personal.gender === 'F' && s.health.pregnant.yn === 'yes', colSpan: 'full' },
+      { id: 'pregnantSpecify', path: 'health.pregnant.specify', label: { th: 'โปรดระบุอายุครรภ์ของท่าน', en: 'Please specify your pregnancy duration' }, type: 'select', options: PREGNANCY_MONTH_OPTIONS, condition: (s) => s.personal.gender === 'F' && s.health.pregnant.yn === 'yes', colSpan: 'full' },
     ],
   },
   {
