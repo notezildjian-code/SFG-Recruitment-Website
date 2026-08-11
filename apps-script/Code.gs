@@ -191,7 +191,7 @@ function writeApplicationRow(ss, p) {
     Status: '',
   };
 
-  sheet.appendRow(APPLICATIONS_HEADERS.map(function (h) { return rowObj[h] !== undefined ? rowObj[h] : ''; }));
+  appendRowByHeaders(sheet, rowObj);
 }
 
 function appRating(apps, key) { return apps[key] ? apps[key].rating : ''; }
@@ -203,8 +203,7 @@ function writeChildRows(ss, sheetName, headers, applicationId, rows, mapFn) {
   rows.forEach(function (row) {
     var isEmpty = Object.keys(row).every(function (k) { return !row[k]; });
     if (isEmpty) return;
-    var mapped = mapFn(row);
-    sheet.appendRow(headers.map(function (h) { return mapped[h] !== undefined ? mapped[h] : ''; }));
+    appendRowByHeaders(sheet, mapFn(row));
   });
 }
 
@@ -217,8 +216,23 @@ function saveAttachments(ss, applicationId, attachments) {
     var blob = Utilities.newBlob(Utilities.base64Decode(att.base64Data), att.mimeType, att.fileName);
     var ext = (att.fileName.match(/\.[^.]+$/) || [''])[0];
     var file = appFolder.createFile(blob).setName(applicationId + '_' + att.documentType + ext);
-    sheet.appendRow([applicationId, att.documentType, att.fileName, file.getUrl(), att.mimeType, att.sizeBytes]);
+    appendRowByHeaders(sheet, {
+      ApplicationID: applicationId, DocumentType: att.documentType, FileName: att.fileName,
+      DriveFileURL: file.getUrl(), MimeType: att.mimeType, FileSizeBytes: att.sizeBytes,
+    });
   });
+}
+
+// Appends a row aligned to the sheet's ACTUAL current header row (by name), not the
+// headers array a caller happens to pass. This is what keeps old columns from getting
+// silently misaligned when a future change adds/removes/reorders fields in code --
+// ensureSheetWithHeaders only ever appends new header names, never reorders existing ones,
+// so a column's position in the sheet is stable once created.
+function appendRowByHeaders(sheet, valuesObj) {
+  var lastCol = sheet.getLastColumn();
+  var currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var row = currentHeaders.map(function (h) { return valuesObj[h] !== undefined ? valuesObj[h] : ''; });
+  sheet.appendRow(row);
 }
 
 function getSpreadsheet() {
@@ -248,6 +262,16 @@ function ensureSheetWithHeaders(ss, name, headers) {
     sheet = ss.insertSheet(name);
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
+    return sheet;
+  }
+  // Existing sheet: append any header names the code now expects but the sheet doesn't
+  // have yet, as new columns at the end. Never reorder or remove existing columns --
+  // that would misalign every row already written under the old column positions.
+  var lastCol = sheet.getLastColumn();
+  var existingHeaders = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+  var missing = headers.filter(function (h) { return existingHeaders.indexOf(h) === -1; });
+  if (missing.length) {
+    sheet.getRange(1, existingHeaders.length + 1, 1, missing.length).setValues([missing]);
   }
   return sheet;
 }
