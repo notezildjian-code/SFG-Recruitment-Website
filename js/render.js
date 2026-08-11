@@ -318,7 +318,7 @@ function renderOtherStep(state) {
         <div class="field-group"><label class="field-label">${bilingual({ th: 'เบอร์โทรศัพท์มือถือ', en: 'Mobile Phone No.' })}</label><input type="tel" data-path="other.emergencyContacts.${i}.mobile" value="${escapeHtml(c.mobile || '')}" /></div>
         <div class="field-group"><label class="field-label">${bilingual({ th: 'ความสัมพันธ์', en: 'Relationship' })}</label><input type="text" data-path="other.emergencyContacts.${i}.relationship" value="${escapeHtml(c.relationship || '')}" /></div>
       </div>
-      ${contacts.length > 2 ? `<button type="button" class="btn-remove-row" data-remove-repeater="emergencyContacts" data-index="${i}">${bilingual({ th: 'ลบแถว', en: 'Remove' })}</button>` : ''}
+      ${contacts.length > 1 ? `<button type="button" class="btn-remove-row" data-remove-repeater="emergencyContacts" data-index="${i}">${bilingual({ th: 'ลบแถว', en: 'Remove' })}</button>` : ''}
     </div>`
     )
     .join('');

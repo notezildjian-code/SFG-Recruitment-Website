@@ -71,6 +71,16 @@ const YES_NO_OPTIONS = [
   { value: 'yes', label: { th: 'เคย / มี', en: 'Yes' } },
 ];
 
+const PREGNANT_YES_NO_OPTIONS = [
+  { value: 'no', label: { th: 'ไม่', en: 'No' } },
+  { value: 'yes', label: { th: 'ใช่', en: 'Yes' } },
+];
+
+const PREGNANCY_MONTH_OPTIONS = Array.from({ length: 8 }, (_, i) => ({
+  value: String(i + 1),
+  label: { th: `${i + 1} เดือน`, en: `${i + 1} month${i + 1 > 1 ? 's' : ''}` },
+}));
+
 // Steps counted toward the progress bar's percentage. 'language' and 'consentGate' are
 // gating screens shown before this numbered flow and are excluded from the percentage.
 const NUMBERED_STEP_IDS = ['positionSalary', 'personal', 'education', 'workHistory', 'skills', 'health', 'other', 'review'];
@@ -149,14 +159,14 @@ const STEPS = [
     id: 'health',
     title: { th: '6. สุขภาพอนามัย', en: '6. Health' },
     fields: [
-      { id: 'illnessYn', path: 'health.illness.yn', label: { th: 'ท่านเคยเจ็บป่วย หรือเป็นโรคร้ายแรงหรือไม่', en: 'Do you have any personal illness, contagious, infectious disease?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },
+      { id: 'illnessYn', path: 'health.illness.yn', label: { th: 'ในช่วง 3-5 ปีนี้ ท่านเคยเจ็บป่วย หรือเป็นโรคร้ายแรงหรือไม่', en: 'In the past 3-5 years, have you had any personal illness, contagious, infectious disease?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },
       { id: 'illnessSpecify', path: 'health.illness.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', condition: (s) => s.health.illness.yn === 'yes', colSpan: 'full' },
       { id: 'chronicYn', path: 'health.chronicDisease.yn', label: { th: 'ท่านมีโรคประจำตัวหรือไม่', en: 'Do you have any disease?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },
       { id: 'chronicSpecify', path: 'health.chronicDisease.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', condition: (s) => s.health.chronicDisease.yn === 'yes', colSpan: 'full' },
       { id: 'disabilityYn', path: 'health.disability.yn', label: { th: 'ท่านมีความบกพร่อง หรือมีความพิการทางร่างกายหรือไม่', en: 'Do you have physical disabilities or handicap?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },
       { id: 'disabilitySpecify', path: 'health.disability.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', condition: (s) => s.health.disability.yn === 'yes', colSpan: 'full' },
-      { id: 'pregnantYn', path: 'health.pregnant.yn', label: { th: 'ท่านกำลังตั้งครรภ์หรือไม่', en: 'Are you pregnant?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, condition: (s) => s.personal.gender === 'F', colSpan: 'full' },
-      { id: 'pregnantSpecify', path: 'health.pregnant.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', condition: (s) => s.personal.gender === 'F' && s.health.pregnant.yn === 'yes', colSpan: 'full' },
+      { id: 'pregnantYn', path: 'health.pregnant.yn', label: { th: 'ท่านกำลังตั้งครรภ์หรือไม่', en: 'Are you pregnant?' }, type: 'radio', required: true, options: PREGNANT_YES_NO_OPTIONS, condition: (s) => s.personal.gender === 'F', colSpan: 'full' },
+      { id: 'pregnantSpecify', path: 'health.pregnant.specify', label: { th: 'อายุครรภ์ (เดือน)', en: 'Pregnancy duration (months)' }, type: 'select', options: PREGNANCY_MONTH_OPTIONS, condition: (s) => s.personal.gender === 'F' && s.health.pregnant.yn === 'yes', colSpan: 'full' },
     ],
   },
   {

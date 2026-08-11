@@ -43,7 +43,7 @@ function createInitialState() {
       criminalRecord: { yn: '', specify: '' },
       previousSFG: { yn: '', specify: '' },
       willingToRelocate: '',
-      emergencyContacts: [{ name: '', mobile: '', relationship: '' }, { name: '', mobile: '', relationship: '' }],
+      emergencyContacts: [{ name: '', mobile: '', relationship: '' }],
     },
     consent: { documentsAttached: [], otherDocSpecify: '', consentGiven: false, signatureFullName: '', signatureDate: new Date().toISOString().slice(0, 10) },
     attachments: [],
