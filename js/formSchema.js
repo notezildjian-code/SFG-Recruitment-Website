@@ -23,18 +23,6 @@ const COMPUTER_APPS = [
   { value: 'gemini', label: { th: 'Gemini', en: 'Gemini' } },
 ];
 
-const DOCUMENT_CHECKLIST_ITEMS = [
-  { value: 'photo', label: { th: 'รูปถ่าย', en: 'Photo' } },
-  { value: 'employmentLetter', label: { th: 'หนังสือรับรองการทำงาน', en: 'Employment Letter' } },
-  { value: 'marriageCert', label: { th: 'สำเนาทะเบียนสมรส', en: 'Marriage Certification' } },
-  { value: 'idCardCopy', label: { th: 'สำเนาบัตรประชาชน', en: 'Citizen Identity Card' } },
-  { value: 'residenceCert', label: { th: 'สำเนาทะเบียนบ้าน', en: 'Residence Certificate' } },
-  { value: 'educationCert', label: { th: 'สำเนาหลักฐานการศึกษา', en: 'Educational Certificate' } },
-  { value: 'changedNameCert', label: { th: 'สำเนาใบเปลี่ยนชื่อ-นามสกุล', en: 'Changed Name Certificate' } },
-  { value: 'militaryCert', label: { th: 'สำเนาหลักฐานการเกณฑ์ทหาร', en: 'Military Certificate' } },
-  { value: 'others', label: { th: 'อื่น ๆ (โปรดระบุ)', en: 'Others (Please specify)' } },
-];
-
 const NAME_PREFIX_OPTIONS = [
   { value: 'mr', label: { th: 'นาย', en: 'Mr.' } },
   { value: 'mrs', label: { th: 'นาง', en: 'Mrs.' } },
@@ -139,11 +127,13 @@ const STEPS = [
   {
     id: 'education',
     title: { th: '3. วุฒิการศึกษา', en: '3. Educational Background' },
+    tabLabel: { th: 'การศึกษา', en: 'Education' },
     dynamicRepeater: 'education',
   },
   {
     id: 'workHistory',
     title: { th: '4. ประวัติการทำงาน/ฝึกงาน', en: '4. Working Record / Internship' },
+    tabLabel: { th: 'ประวัติการทำงาน', en: 'Work History' },
     dynamicRepeater: 'workHistory',
   },
   {
@@ -159,6 +149,7 @@ const STEPS = [
   {
     id: 'health',
     title: { th: '6. สุขภาพอนามัย', en: '6. Health' },
+    tabLabel: { th: 'สุขภาพ', en: 'Health' },
     fields: [
       { id: 'illnessYn', path: 'health.illness.yn', label: { th: 'ในช่วง 3-5 ปีนี้ ท่านเคยเจ็บป่วย หรือเป็นโรคร้ายแรงหรือไม่', en: 'In the past 3-5 years, have you had any personal illness, contagious, infectious disease?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },
       { id: 'illnessSpecify', path: 'health.illness.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', condition: (s) => s.health.illness.yn === 'yes', colSpan: 'full' },
@@ -173,6 +164,7 @@ const STEPS = [
   {
     id: 'other',
     title: { th: '7. รายละเอียดอื่น ๆ', en: '7. Other Information' },
+    tabLabel: { th: 'อื่น ๆ', en: 'Other' },
     fields: [
       { id: 'sourceOfPosting', path: 'other.sourceOfPosting', label: { th: 'ท่านทราบว่ามีตำแหน่งงานว่างจากที่ใด', en: 'Where did you find the information about this position?' }, type: 'text', colSpan: 'full' },
       { id: 'referredBy', path: 'other.referredBy', label: { th: 'โปรดระบุชื่อบุคคลที่แนะนำท่านมาสมัครงาน (หากมี)', en: 'Who did you suggest you to apply for this position? (If any)' }, type: 'text', colSpan: 'full' },
@@ -197,7 +189,6 @@ window.SFGFormSchema = {
   NUMBERED_STEP_IDS,
   EDUCATION_LEVELS,
   COMPUTER_APPS,
-  DOCUMENT_CHECKLIST_ITEMS,
   NAME_PREFIX_OPTIONS,
   MARITAL_OPTIONS,
   MILITARY_OPTIONS,

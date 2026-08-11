@@ -1,5 +1,11 @@
 const MAX_FILE_BYTES = 2 * 1024 * 1024; // 2 MB per file
 const MAX_TOTAL_BASE64_BYTES = 8 * 1024 * 1024; // 8 MB combined, base64-inflated
+const ALLOWED_ATTACHMENT_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx', '.pdf'];
+
+function hasAllowedAttachmentExtension(fileName) {
+  const lower = fileName.toLowerCase();
+  return ALLOWED_ATTACHMENT_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
 
 function currentAttachmentsTotalBytes(state, excludeDocType) {
   return state.attachments.filter((a) => a.documentType !== excludeDocType).reduce((sum, a) => sum + (a.sizeBytes || 0), 0);
@@ -21,6 +27,10 @@ function fileToBase64(file) {
 // Returns { ok: true } on success (mutates state.attachments), or { ok: false, message: {th,en} }.
 async function handleDocUpload(state, documentType, file) {
   if (!file) return { ok: false, message: { th: 'ไม่พบไฟล์', en: 'No file selected.' } };
+
+  if (!hasAllowedAttachmentExtension(file.name)) {
+    return { ok: false, message: { th: 'รองรับเฉพาะไฟล์ .JPG, .PNG, .DOC, .DOCX, .XLS, .XLSX และ .PDF เท่านั้น', en: 'Only .JPG, .PNG, .DOC, .DOCX, .XLS, .XLSX and .PDF files are supported.' } };
+  }
 
   if (file.size > MAX_FILE_BYTES) {
     return { ok: false, message: { th: 'ไฟล์ใหญ่เกินไป กรุณาใช้ไฟล์ไม่เกิน 2 MB', en: 'File too large. Please use a file under 2 MB.' } };

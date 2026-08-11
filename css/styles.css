@@ -92,6 +92,34 @@ body {
   color: var(--neptune-blue);
 }
 
+.progress-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 12px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
+
+.progress-tab {
+  flex: 1 0 auto;
+  min-width: 64px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 6px 4px 8px;
+  font-family: var(--font-th);
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.progress-tab.active {
+  color: var(--neptune-blue);
+  border-bottom-color: var(--jupiter-orange);
+  font-weight: 600;
+}
+
 /* Step card */
 .step-card {
   background: var(--card-bg);
@@ -216,6 +244,8 @@ input[disabled], input[readonly] { background: var(--bg); color: var(--muted); }
   border-radius: 8px;
 }
 .consent-text-en { font-family: var(--font-en); color: var(--muted); margin-top: -8px; }
+
+.consent-text { font-size: 14px; color: var(--ink); background: var(--bg); padding: 14px 16px; border-radius: 8px; }
 
 .consent-checkbox {
   display: flex;

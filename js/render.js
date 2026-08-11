@@ -407,21 +407,26 @@ function reviewRow(label, value) {
   return `<div class="review-row"><span class="review-label">${bilingual(label)}</span><span class="review-value">${escapeHtml(value)}</span></div>`;
 }
 
+const ATTACHMENT_ACCEPT = '.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.pdf';
+
+function attachmentNote(state, documentType) {
+  const att = state.attachments.find((a) => a.documentType === documentType);
+  return att ? `<span class="file-attached-note">${escapeHtml(att.fileName)} (${Math.round(att.sizeBytes / 1024)} KB)</span>` : '';
+}
+
 function renderReviewStep(state) {
   const p = state.personal;
-  const docChecklist = SFGFormSchema.DOCUMENT_CHECKLIST_ITEMS.map((doc) => {
-    const checked = state.consent.documentsAttached.includes(doc.value);
-    const att = state.attachments.find((a) => a.documentType === doc.value);
-    return `<div class="doc-checklist-item">
-      <label class="checkbox-inline">
-        <input type="checkbox" data-doc-checklist="${doc.value}" ${checked ? 'checked' : ''} />
-        <span>${bilingual(doc.label)}</span>
-      </label>
-      ${checked ? `<input type="file" accept="image/*,.pdf" data-doc-upload="${doc.value}" />` : ''}
-      ${att ? `<span class="file-attached-note">${escapeHtml(att.fileName)} (${Math.round(att.sizeBytes / 1024)} KB)</span>` : ''}
-      ${checked && doc.value === 'others' ? `<input type="text" placeholder="Specify" data-path="consent.otherDocSpecify" value="${escapeHtml(state.consent.otherDocSpecify || '')}" />` : ''}
-    </div>`;
-  }).join('');
+
+  const additionalAttachmentRows = state.consent.additionalAttachments
+    .map(
+      (row, i) => `
+    <div class="doc-checklist-item" data-repeater="additionalAttachments" data-index="${i}">
+      <input type="file" accept="${ATTACHMENT_ACCEPT}" data-doc-upload="${row.id}" />
+      ${attachmentNote(state, row.id)}
+      <button type="button" class="btn-remove-row" data-remove-repeater="additionalAttachments" data-index="${i}">${bilingual({ th: 'ลบ', en: 'Remove' })}</button>
+    </div>`
+    )
+    .join('');
 
   return `
     <div class="review-section">
@@ -447,9 +452,32 @@ function renderReviewStep(state) {
     </div>
     <div class="review-section consent-final">
       <h3>${bilingual({ th: '8. การยินยอมเปิดเผยและให้ข้อมูลส่วนตัว', en: '8. Disclosure of Personal Information' })}</h3>
-      <p class="consent-text-th">ในการสมัครงานครั้งนี้ ข้าพเจ้ายินยอมเปิดเผยและให้ข้อมูลส่วนตัว อาทิเช่น ข้อมูลส่วนบุคคล การศึกษา ประวัติการทำงาน สุขภาพอนามัย ตลอดจนข้อมูลอื่น ๆ ให้กับบริษัท เพื่อใช้ในการติดต่อกับข้าพเจ้า หรือเพื่อพิจารณาในการสมัครงาน หรือเพื่อประโยชน์โดยชอบด้วยกฎหมาย หรือเพื่อปฏิบัติตามกฎหมาย หรือข้อยกเว้นตามกฎหมาย ไม่ว่าตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล หรือกฎหมายใด โดยข้าพเจ้าได้แนบเอกสารที่เกี่ยวข้อง ดังนี้</p>
-      <p class="consent-text-en">To applying for this job, I agree to disclose and provide personal information such as personal information, educational background, working record, health and other information to the company for use in contacting, for consideration a job, for comply with the Personal Data Protection Act or any other laws. I have attached the following relevant documents:</p>
-      <div class="doc-checklist">${docChecklist}</div>
+      <p class="consent-text">${bilingual({
+        th: 'ในการสมัครงานครั้งนี้ ข้าพเจ้ายินยอมเปิดเผยและให้ข้อมูลส่วนตัว อาทิเช่น ข้อมูลส่วนบุคคล การศึกษา ประวัติการทำงาน สุขภาพอนามัย ตลอดจนข้อมูลอื่น ๆ ให้กับบริษัท เพื่อใช้ในการติดต่อกับข้าพเจ้า หรือเพื่อพิจารณาในการสมัครงาน หรือเพื่อประโยชน์โดยชอบด้วยกฎหมาย หรือเพื่อปฏิบัติตามกฎหมาย หรือข้อยกเว้นตามกฎหมาย ไม่ว่าตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล หรือกฎหมายใด',
+        en: 'In applying for this position, I consent to disclose and provide my personal information, such as personal data, education, work history, health information, and other information, to the company for the purpose of contacting me, considering my job application, for legitimate interest, for legal compliance, or as otherwise permitted by law, whether under the Personal Data Protection Act or any other law.',
+      })}</p>
+      <div class="subsection">
+        <h4>${bilingual({ th: 'เอกสารแนบ', en: 'Attachments' })}</h4>
+        <p class="step-hint">${bilingual({ th: 'รองรับไฟล์ประเภท .JPG, .PNG, .DOC, .DOCX, .XLS, .XLSX และ .PDF เท่านั้น', en: 'Supported file types: .JPG, .PNG, .DOC, .DOCX, .XLS, .XLSX and .PDF only.' })}</p>
+        <div class="doc-checklist">
+          <div class="doc-checklist-item">
+            <label class="field-label">${bilingual({ th: 'รูปถ่าย', en: 'Photo' })}</label>
+            <input type="file" accept="${ATTACHMENT_ACCEPT}" data-doc-upload="photo" />
+            ${attachmentNote(state, 'photo')}
+          </div>
+          <div class="doc-checklist-item">
+            <label class="field-label">${bilingual({ th: 'ประวัติส่วนตัว (CV)', en: 'Resume / CV' })}</label>
+            <input type="file" accept="${ATTACHMENT_ACCEPT}" data-doc-upload="cv" />
+            ${attachmentNote(state, 'cv')}
+          </div>
+          ${additionalAttachmentRows}
+        </div>
+        <button type="button" class="btn-add-row" data-add-repeater="additionalAttachments">${bilingual({ th: '+ เพิ่มไฟล์แนบ', en: '+ Add Attachment' })}</button>
+        <div class="field-group field-full">
+          <label class="field-label">${bilingual({ th: 'ลิงก์ผลงาน / Portfolio (ถ้ามี)', en: 'Portfolio link (if any)' })}</label>
+          <input type="url" placeholder="https://..." data-path="consent.portfolioLink" value="${escapeHtml(state.consent.portfolioLink || '')}" />
+        </div>
+      </div>
       <p class="certification-text">"I hereby certify that all the information and documents in this application are CORRECT and TRUE. I am aware that if any information is found to be false by intention, I agree be justified and immediately dismissed without any warning and/or compensation."</p>
       <div class="field-group field-full">
         <label class="field-label">${bilingual({ th: 'ลายมือชื่อผู้สมัคร (พิมพ์ชื่อ-นามสกุลเต็ม)', en: 'Signature of Applicant (type full name)' })}</label>
@@ -510,6 +538,22 @@ function renderProgressBar(currentIndex) {
   const numberedIndex = numberedIds.indexOf(step.id);
   const percent = Math.round(((numberedIndex + 1) / numberedIds.length) * 100);
 
+  const tabs = numberedIds
+    .map((id) => {
+      const targetIndex = steps.findIndex((s) => s.id === id);
+      const targetStep = steps[targetIndex];
+      const label = targetStep.tabLabel || stripStepNumber(targetStep.title);
+      return `<button type="button" class="progress-tab ${id === step.id ? 'active' : ''}" data-step-tab="${targetIndex}">${bilingual(label)}</button>`;
+    })
+    .join('');
+
   return `<div class="progress-bar-track"><div class="progress-bar-fill" style="width:${percent}%"></div></div>
-  <div class="progress-caption">${bilingual(step.title)} &middot; ${percent}%</div>`;
+  <div class="progress-caption">${bilingual(step.title)} &middot; ${percent}%</div>
+  <div class="progress-tabs">${tabs}</div>`;
+}
+
+// Tab-strip labels reuse each step's numbered title with the leading "N. " stripped,
+// unless the step defines a shorter dedicated tabLabel.
+function stripStepNumber(title) {
+  return { th: title.th.replace(/^\d+\.\s*/, ''), en: title.en.replace(/^\d+\.\s*/, '') };
 }

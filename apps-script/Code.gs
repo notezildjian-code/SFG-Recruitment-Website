@@ -23,8 +23,7 @@ var APPLICATIONS_HEADERS = [
   'CriminalRecord_YN', 'CriminalRecord_Specify',
   'PreviousSFG_YN', 'PreviousSFG_Specify',
   'WillingToRelocate',
-  'Doc_Photo', 'Doc_EmploymentLetter', 'Doc_MarriageCert', 'Doc_IDCardCopy', 'Doc_ResidenceCert',
-  'Doc_EducationCert', 'Doc_ChangedNameCert', 'Doc_MilitaryCert', 'Doc_Others_Specify',
+  'PortfolioLink',
   'ConsentGiven', 'SignatureFullName', 'SignatureDate', 'Status',
 ];
 
@@ -176,15 +175,7 @@ function writeApplicationRow(ss, p) {
     PreviousSFG_YN: other.previousSFG.yn,
     PreviousSFG_Specify: other.previousSFG.specify,
     WillingToRelocate: other.willingToRelocate,
-    Doc_Photo: hasDoc(consent, 'photo'),
-    Doc_EmploymentLetter: hasDoc(consent, 'employmentLetter'),
-    Doc_MarriageCert: hasDoc(consent, 'marriageCert'),
-    Doc_IDCardCopy: hasDoc(consent, 'idCardCopy'),
-    Doc_ResidenceCert: hasDoc(consent, 'residenceCert'),
-    Doc_EducationCert: hasDoc(consent, 'educationCert'),
-    Doc_ChangedNameCert: hasDoc(consent, 'changedNameCert'),
-    Doc_MilitaryCert: hasDoc(consent, 'militaryCert'),
-    Doc_Others_Specify: hasDoc(consent, 'others') ? consent.otherDocSpecify : '',
+    PortfolioLink: consent.portfolioLink,
     ConsentGiven: consent.consentGiven,
     SignatureFullName: consent.signatureFullName,
     SignatureDate: consent.signatureDate,
@@ -195,7 +186,6 @@ function writeApplicationRow(ss, p) {
 }
 
 function appRating(apps, key) { return apps[key] ? apps[key].rating : ''; }
-function hasDoc(consent, key) { return consent.documentsAttached && consent.documentsAttached.indexOf(key) !== -1; }
 
 function writeChildRows(ss, sheetName, headers, applicationId, rows, mapFn) {
   if (!rows || !rows.length) return;

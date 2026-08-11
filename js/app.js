@@ -1,7 +1,7 @@
 // Bumped whenever the state shape changes in a backwards-incompatible way.
 // A saved draft from an older version is discarded on load instead of crashing
 // against fields it no longer has (or fields it has that got renamed/removed).
-const SCHEMA_VERSION = 8;
+const SCHEMA_VERSION = 9;
 
 function createInitialState() {
   return {
@@ -45,7 +45,7 @@ function createInitialState() {
       willingToRelocate: '',
       emergencyContacts: [{ name: '', mobile: '', relationship: '' }],
     },
-    consent: { documentsAttached: [], otherDocSpecify: '', consentGiven: false, signatureFullName: '', signatureDate: new Date().toISOString().slice(0, 10) },
+    consent: { additionalAttachments: [], portfolioLink: '', consentGiven: false, signatureFullName: '', signatureDate: new Date().toISOString().slice(0, 10) },
     attachments: [],
   };
 }
@@ -109,6 +109,7 @@ const App = {
   render() {
     const step = SFGFormSchema.STEPS[this.currentStep];
     document.getElementById('progress-container').innerHTML = renderProgressBar(this.currentStep);
+    this.bindProgressTabs();
     const stepContainer = document.getElementById('step-container');
     const stepTitle = step.id === 'language' ? '' : `<h2 class="step-title">${bilingual(step.title)}</h2>`;
     stepContainer.innerHTML = `<div class="step-card">
@@ -126,6 +127,12 @@ const App = {
     if (step.id === 'workHistory') this.bindWorkHistoryAutoCalc(stepContainer);
     if (step.id === 'review') this.bindReview(stepContainer);
     if (step.id === 'consentGate') this.bindConsentGate(stepContainer);
+  },
+
+  bindProgressTabs() {
+    document.querySelectorAll('[data-step-tab]').forEach((btn) => {
+      btn.addEventListener('click', () => this.goToStep(Number(btn.getAttribute('data-step-tab'))));
+    });
   },
 
   bindLanguageStep(container) {
@@ -239,6 +246,7 @@ const App = {
         if (key === 'emergencyContacts') this.state.other.emergencyContacts.push({ name: '', mobile: '', relationship: '' });
         if (key === 'additionalLanguages') this.state.skills.languages.additional.push({ name: '', overall: '' });
         if (key === 'additionalApps') this.state.skills.computer.additionalApps.push({ name: '', rating: '' });
+        if (key === 'additionalAttachments') this.state.consent.additionalAttachments.push({ id: uuid() });
         saveDraft(this.state);
         this.render();
       });
@@ -252,6 +260,11 @@ const App = {
         if (key === 'emergencyContacts') this.state.other.emergencyContacts.splice(index, 1);
         if (key === 'additionalLanguages') this.state.skills.languages.additional.splice(index, 1);
         if (key === 'additionalApps') this.state.skills.computer.additionalApps.splice(index, 1);
+        if (key === 'additionalAttachments') {
+          const removed = this.state.consent.additionalAttachments[index];
+          if (removed) removeAttachment(this.state, removed.id);
+          this.state.consent.additionalAttachments.splice(index, 1);
+        }
         saveDraft(this.state);
         this.render();
       });
@@ -267,20 +280,6 @@ const App = {
   },
 
   bindReview(container) {
-    container.querySelectorAll('[data-doc-checklist]').forEach((cb) => {
-      cb.addEventListener('change', () => {
-        const doc = cb.getAttribute('data-doc-checklist');
-        if (cb.checked) {
-          if (!this.state.consent.documentsAttached.includes(doc)) this.state.consent.documentsAttached.push(doc);
-        } else {
-          this.state.consent.documentsAttached = this.state.consent.documentsAttached.filter((d) => d !== doc);
-          removeAttachment(this.state, doc);
-        }
-        saveDraft(this.state);
-        this.render();
-      });
-    });
-
     container.querySelectorAll('[data-doc-upload]').forEach((input) => {
       input.addEventListener('change', async () => {
         const doc = input.getAttribute('data-doc-upload');
