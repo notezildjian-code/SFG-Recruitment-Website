@@ -119,7 +119,10 @@ const App = {
     this.bindRepeaters(stepContainer);
     this.bindNav();
     if (step.id === 'language') this.bindLanguageStep(stepContainer);
-    if (step.id === 'personal') this.bindAgeAutoCalc(stepContainer);
+    if (step.id === 'personal') {
+      this.bindAgeAutoCalc(stepContainer);
+      this.bindNamePrefixAutoGender(stepContainer);
+    }
     if (step.id === 'workHistory') this.bindWorkHistoryAutoCalc(stepContainer);
     if (step.id === 'review') this.bindReview(stepContainer);
     if (step.id === 'consentGate') this.bindConsentGate(stepContainer);
@@ -146,6 +149,20 @@ const App = {
       const ageInput = container.querySelector('[data-path="personal.age"]');
       if (ageInput) ageInput.value = age;
       saveDraft(this.state);
+    });
+  },
+
+  bindNamePrefixAutoGender(container) {
+    const prefixSelect = container.querySelector('[data-path="personal.namePrefix"]');
+    if (!prefixSelect) return;
+    const genderForPrefix = { mr: 'M', mrs: 'F', miss: 'F' };
+    prefixSelect.addEventListener('change', () => {
+      const mapped = genderForPrefix[prefixSelect.value];
+      if (mapped && this.state.personal.gender !== mapped) {
+        this.state.personal.gender = mapped;
+        saveDraft(this.state);
+        this.render();
+      }
     });
   },
 
