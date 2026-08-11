@@ -1,13 +1,15 @@
 // Single source of truth for form fields, labels (Thai + English) and validation rules.
 // Edit this file to add/rename/remove fields — render.js and validation.js both read from it.
 
+// Ordered highest to lowest so the per-row level dropdown lists the most advanced
+// qualifications first — applicants are asked to add their highest education first.
 const EDUCATION_LEVELS = [
-  { value: 'elementary', label: { th: 'ประถมศึกษา', en: 'Elementary' } },
-  { value: 'lower_secondary', label: { th: 'มัธยมศึกษาตอนต้น', en: 'Lower Secondary' } },
-  { value: 'upper_secondary', label: { th: 'มัธยมศึกษาตอนปลาย', en: 'Upper Secondary' } },
-  { value: 'vocational', label: { th: 'อาชีวศึกษา', en: 'Vocational' } },
-  { value: 'bachelor', label: { th: 'ปริญญาตรี', en: 'Bachelor' } },
   { value: 'master', label: { th: 'ปริญญาโท', en: 'Master' } },
+  { value: 'bachelor', label: { th: 'ปริญญาตรี', en: 'Bachelor' } },
+  { value: 'vocational', label: { th: 'อาชีวศึกษา', en: 'Vocational' } },
+  { value: 'upper_secondary', label: { th: 'มัธยมศึกษาตอนปลาย', en: 'Upper Secondary' } },
+  { value: 'lower_secondary', label: { th: 'มัธยมศึกษาตอนต้น', en: 'Lower Secondary' } },
+  { value: 'elementary', label: { th: 'ประถมศึกษา', en: 'Elementary' } },
   { value: 'other', label: { th: 'อื่น ๆ (โปรดระบุ)', en: 'Other (Please specify)' } },
 ];
 
@@ -44,6 +46,7 @@ const MARITAL_OPTIONS = [
 const MILITARY_OPTIONS = [
   { value: 'served', label: { th: 'ผ่านการเกณฑ์แล้ว เมื่อปี (พ.ศ.)', en: 'Served, when (B.E.)' }, hasYear: true },
   { value: 'not_yet', label: { th: 'ยังไม่ได้เกณฑ์ จะเกณฑ์ในปี (พ.ศ.)', en: 'Not yet, when (B.E.)' }, hasYear: true },
+  { value: 'exempt_black_card', label: { th: 'ได้รับการยกเว้น เพราะจับได้ใบดำ', en: 'Exempted, drew the black draft card' } },
   { value: 'exempt_other', label: { th: 'ได้รับการยกเว้น เพราะ', en: 'Exempted, because' }, hasReason: true },
 ];
 
@@ -98,17 +101,16 @@ const STEPS = [
       { id: 'dobBE', path: 'personal.dobBE', label: { th: 'วัน/เดือน/ปีเกิด', en: 'Date of Birth' }, type: 'date', required: true },
       { id: 'age', path: 'personal.age', label: { th: 'อายุ', en: 'Age' }, type: 'text', readonly: true },
       { id: 'idCardNo', path: 'personal.idCardNo', label: { th: 'เลขที่บัตรประชาชน', en: 'Identity Card No.' }, type: 'text', required: true, pattern: '^[0-9]{13}$', patternError: { th: 'กรอกเลขบัตรประชาชน 13 หลัก', en: 'Enter a 13-digit ID card number' } },
-      { id: 'homePhone', path: 'personal.homePhone', label: { th: 'เบอร์โทรศัพท์ (ที่บ้าน)', en: 'Telephone No. (Home)' }, type: 'tel' },
       { id: 'mobilePhone', path: 'personal.mobilePhone', label: { th: 'เบอร์โทรศัพท์มือถือ', en: 'Mobile Phone No.' }, type: 'tel', required: true },
       { id: 'email', path: 'personal.email', label: { th: 'อีเมล', en: 'Email' }, type: 'email', required: true },
       { id: 'lineId', path: 'personal.lineId', label: { th: 'ไลน์ ไอดี', en: 'Line ID' }, type: 'text' },
       { id: 'address', path: 'personal.address', label: { th: 'ที่อยู่ปัจจุบัน', en: 'Current Address' }, type: 'textarea', required: true, colSpan: 'full' },
-      { id: 'postalCode', path: 'personal.postalCode', label: { th: 'รหัสไปรษณีย์', en: 'Post / Zip' }, type: 'text' },
+      { id: 'postalCode', path: 'personal.postalCode', label: { th: 'รหัสไปรษณีย์', en: 'Post / Zip' }, type: 'text', required: true },
       { id: 'maritalStatus', path: 'personal.maritalStatus', label: { th: 'สถานภาพการสมรส', en: 'Marital Status' }, type: 'select', required: true, options: MARITAL_OPTIONS, colSpan: 'full' },
       { id: 'spouseName', path: 'personal.spouseName', label: { th: 'ชื่อคู่สมรส', en: "Spouse's Name" }, type: 'text', condition: (s) => ['married_registered', 'married_not_registered'].includes(s.personal.maritalStatus) },
       { id: 'spouseAge', path: 'personal.spouseAge', label: { th: 'อายุคู่สมรส', en: 'Spouse Age' }, type: 'number', condition: (s) => ['married_registered', 'married_not_registered'].includes(s.personal.maritalStatus) },
       { id: 'numChildren', path: 'personal.numChildren', label: { th: 'จำนวนบุตร (หากมี)', en: 'No. of Children (If any)' }, type: 'number', condition: (s) => ['married_registered', 'married_not_registered'].includes(s.personal.maritalStatus) },
-      { id: 'military', path: 'personal.military.status', label: { th: 'การรับราชการทหาร', en: 'Military Services' }, type: 'radio', options: MILITARY_OPTIONS, condition: (s) => s.personal.gender === 'M', colSpan: 'full' },
+      { id: 'military', path: 'personal.military.status', label: { th: 'การรับราชการทหาร', en: 'Military Services' }, type: 'select', options: MILITARY_OPTIONS, condition: (s) => s.personal.gender === 'M', colSpan: 'full' },
       { id: 'militaryServedYearBE', path: 'personal.military.servedYearBE', label: { th: 'ปีที่ผ่านการเกณฑ์ (พ.ศ.)', en: 'Year served (B.E.)' }, type: 'text', condition: (s) => s.personal.gender === 'M' && s.personal.military.status === 'served', colSpan: 'full' },
       { id: 'militaryNotYetYearBE', path: 'personal.military.notYetYearBE', label: { th: 'ปีที่จะเกณฑ์ (พ.ศ.)', en: 'Year to be conscripted (B.E.)' }, type: 'text', condition: (s) => s.personal.gender === 'M' && s.personal.military.status === 'not_yet', colSpan: 'full' },
       { id: 'militaryExemptOtherReason', path: 'personal.military.exemptOtherReason', label: { th: 'โปรดระบุเหตุผลที่ได้รับการยกเว้น', en: 'Please specify the reason for exemption' }, type: 'text', condition: (s) => s.personal.gender === 'M' && s.personal.military.status === 'exempt_other', colSpan: 'full' },
@@ -117,7 +119,7 @@ const STEPS = [
   {
     id: 'education',
     title: { th: '3. วุฒิการศึกษา', en: '3. Educational Background' },
-    fixedRepeater: 'education',
+    dynamicRepeater: 'education',
   },
   {
     id: 'workHistory',

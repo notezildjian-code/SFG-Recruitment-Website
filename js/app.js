@@ -9,12 +9,12 @@ function createInitialState() {
       positionApplying: '', positionIsSalesPC: false, positionArea: '', expectedSalary: '',
       nameThai: '', nameEnglish: '', nickname: '',
       gender: '', heightCm: '', weightKg: '', dobBE: '', age: '',
-      idCardNo: '', homePhone: '', mobilePhone: '', email: '', lineId: '', address: '', postalCode: '',
+      idCardNo: '', mobilePhone: '', email: '', lineId: '', address: '', postalCode: '',
       maritalStatus: '', spouseName: '', spouseAge: '', numChildren: '',
       military: { status: '', servedYearBE: '', notYetYearBE: '', exemptOtherReason: '' },
     },
-    education: SFGFormSchema.EDUCATION_LEVELS.map((l) => ({ level: l.value, institution: '', facultyMajor: '', gpa: '' })),
-    workHistory: [{ from: '', to: '', employer: '', position: '', lastSalary: '', reasonForLeaving: '' }],
+    education: [{ level: '', institution: '', facultyMajor: '', gpa: '' }],
+    workHistory: [{ from: '', to: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' }],
     skills: {
       languages: {
         english: { speaking: '', writing: '', reading: '', testResult: '' },
@@ -165,7 +165,8 @@ const App = {
     container.querySelectorAll('[data-add-repeater]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const key = btn.getAttribute('data-add-repeater');
-        if (key === 'workHistory') this.state.workHistory.push({ from: '', to: '', employer: '', position: '', lastSalary: '', reasonForLeaving: '' });
+        if (key === 'education') this.state.education.push({ level: '', institution: '', facultyMajor: '', gpa: '' });
+        if (key === 'workHistory') this.state.workHistory.push({ from: '', to: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' });
         if (key === 'emergencyContacts') this.state.other.emergencyContacts.push({ name: '', mobile: '', relationship: '' });
         saveDraft(this.state);
         this.render();
@@ -175,6 +176,7 @@ const App = {
       btn.addEventListener('click', () => {
         const key = btn.getAttribute('data-remove-repeater');
         const index = Number(btn.getAttribute('data-index'));
+        if (key === 'education') this.state.education.splice(index, 1);
         if (key === 'workHistory') this.state.workHistory.splice(index, 1);
         if (key === 'emergencyContacts') this.state.other.emergencyContacts.splice(index, 1);
         saveDraft(this.state);

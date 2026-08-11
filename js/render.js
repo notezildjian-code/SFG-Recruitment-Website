@@ -163,21 +163,32 @@ function renderPersonalStep(state) {
   return renderFieldsList(step.fields, state);
 }
 
+function renderEducationLevelSelect(path, value) {
+  const placeholder = `<option value="" disabled ${!value ? 'selected' : ''}>-- ${bilingual({ th: 'เลือกระดับ', en: 'Select level' })} --</option>`;
+  const opts = SFGFormSchema.EDUCATION_LEVELS
+    .map((opt) => `<option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>${bilingual(opt.label)}</option>`)
+    .join('');
+  return `<select data-path="${path}">${placeholder}${opts}</select>`;
+}
+
 function renderEducationStep(state) {
   const rows = state.education
     .map(
       (row, i) => `
-    <div class="repeater-row education-row">
-      <div class="edu-level-label">${bilingual(SFGFormSchema.EDUCATION_LEVELS[i].label)}</div>
+    <div class="repeater-row" data-repeater="education" data-index="${i}">
       <div class="field-grid">
+        <div class="field-group"><label class="field-label">${bilingual({ th: 'ระดับวุฒิการศึกษา', en: 'Education Level' })}</label>${renderEducationLevelSelect(`education.${i}.level`, row.level)}</div>
         <div class="field-group"><label class="field-label">${bilingual({ th: 'ชื่อสถาบันการศึกษา', en: 'Institution' })}</label><input type="text" data-path="education.${i}.institution" value="${escapeHtml(row.institution || '')}" /></div>
         <div class="field-group"><label class="field-label">${bilingual({ th: 'คณะ / สาขา', en: 'Faculty / Major' })}</label><input type="text" data-path="education.${i}.facultyMajor" value="${escapeHtml(row.facultyMajor || '')}" /></div>
-        <div class="field-group"><label class="field-label">${bilingual({ th: 'คะแนนเฉลี่ย', en: 'GPA' })}</label><input type="text" data-path="education.${i}.gpa" value="${escapeHtml(row.gpa || '')}" /></div>
+        <div class="field-group"><label class="field-label">${bilingual({ th: 'เกรดเฉลี่ย (GPA)', en: 'GPA' })}</label><input type="text" data-path="education.${i}.gpa" value="${escapeHtml(row.gpa || '')}" /></div>
       </div>
+      ${state.education.length > 1 ? `<button type="button" class="btn-remove-row" data-remove-repeater="education" data-index="${i}">${bilingual({ th: 'ลบแถว', en: 'Remove' })}</button>` : ''}
     </div>`
     )
     .join('');
-  return `<p class="step-hint">${bilingual({ th: 'กรอกเฉพาะระดับการศึกษาที่เกี่ยวข้อง', en: 'Fill in only the education levels that apply to you' })}</p>${rows}`;
+  return `<p class="step-hint">${bilingual({ th: 'กรอกเริ่มจากวุฒิการศึกษาสูงสุดก่อน แล้วกด + เพื่อเพิ่มวุฒิรองลงมา', en: 'Start with your highest qualification, then use + to add earlier ones' })}</p>
+    <div id="education-rows">${rows}</div>
+    <button type="button" class="btn-add-row" data-add-repeater="education">${bilingual({ th: '+ เพิ่มวุฒิการศึกษา', en: '+ Add Education' })}</button>`;
 }
 
 function renderWorkHistoryStep(state) {
@@ -191,13 +202,15 @@ function renderWorkHistoryStep(state) {
         <div class="field-group field-full"><label class="field-label">${bilingual({ th: 'ชื่อนายจ้าง / บริษัท', en: "Employer's Name" })}</label><input type="text" data-path="workHistory.${i}.employer" value="${escapeHtml(row.employer || '')}" /></div>
         <div class="field-group"><label class="field-label">${bilingual({ th: 'ตำแหน่ง', en: 'Position' })}</label><input type="text" data-path="workHistory.${i}.position" value="${escapeHtml(row.position || '')}" /></div>
         <div class="field-group"><label class="field-label">${bilingual({ th: 'เงินเดือนสุดท้าย', en: 'Last Salary' })}</label><input type="text" data-path="workHistory.${i}.lastSalary" value="${escapeHtml(row.lastSalary || '')}" /></div>
+        <div class="field-group field-full"><label class="field-label">${bilingual({ th: 'หน้าที่ความรับผิดชอบ (อย่างย่อ)', en: 'Responsibilities (brief)' })}</label><textarea rows="2" data-path="workHistory.${i}.responsibilities">${escapeHtml(row.responsibilities || '')}</textarea></div>
         <div class="field-group field-full"><label class="field-label">${bilingual({ th: 'เหตุผลที่ออกจากงาน', en: 'Reason for Leaving' })}</label><input type="text" data-path="workHistory.${i}.reasonForLeaving" value="${escapeHtml(row.reasonForLeaving || '')}" /></div>
       </div>
       ${state.workHistory.length > 1 ? `<button type="button" class="btn-remove-row" data-remove-repeater="workHistory" data-index="${i}">${bilingual({ th: 'ลบแถว', en: 'Remove' })}</button>` : ''}
     </div>`
     )
     .join('');
-  return `<div id="workHistory-rows">${rows}</div>
+  return `<p class="step-hint">${bilingual({ th: 'กรอกเริ่มจากประสบการณ์ทำงานล่าสุดก่อน แล้วกด + เพื่อเพิ่มประสบการณ์ก่อนหน้า', en: 'Start with your most recent job, then use + to add earlier ones' })}</p>
+    <div id="workHistory-rows">${rows}</div>
     <button type="button" class="btn-add-row" data-add-repeater="workHistory">${bilingual({ th: '+ เพิ่มประวัติการทำงาน', en: '+ Add Work Record' })}</button>`;
 }
 
