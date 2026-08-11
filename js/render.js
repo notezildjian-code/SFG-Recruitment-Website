@@ -218,13 +218,14 @@ function renderRatingRadios(path, value) {
   return SFGFormSchema.RATING_OPTIONS.map(
     (opt) => `<label class="rating-option">
       <input type="radio" name="${path}" value="${opt.value}" data-path="${path}" ${value === opt.value ? 'checked' : ''} />
-      <span title="${escapeHtml(opt.label.en)}">${opt.value}</span>
+      <span class="rating-number">${opt.value}</span>
+      <span class="rating-word">${bilingual(opt.label)}</span>
     </label>`
   ).join('');
 }
 
 function ratingColumnHeader(label) {
-  return `<th>${bilingual(label)}<br><small class="rating-legend">${bilingual(SFGFormSchema.RATING_LEGEND)}</small></th>`;
+  return `<th>${bilingual(label)}</th>`;
 }
 
 function renderSkillsStep(state) {
@@ -235,8 +236,10 @@ function renderSkillsStep(state) {
       (row, i) => `
       <tr data-repeater="additionalLanguages" data-index="${i}">
         <td><input type="text" placeholder="${escapeHtml(bilingualPlain({ th: 'ชื่อภาษา', en: 'Language name' }))}" data-path="skills.languages.additional.${i}.name" value="${escapeHtml(row.name || '')}" /></td>
-        <td><div class="rating-group">${renderRatingRadios(`skills.languages.additional.${i}.overall`, row.overall)}</div></td>
-        <td><button type="button" class="btn-remove-row" data-remove-repeater="additionalLanguages" data-index="${i}">${bilingual({ th: 'ลบ', en: 'Remove' })}</button></td>
+        <td>
+          <div class="rating-group">${renderRatingRadios(`skills.languages.additional.${i}.overall`, row.overall)}</div>
+          <button type="button" class="btn-remove-row" data-remove-repeater="additionalLanguages" data-index="${i}">${bilingual({ th: 'ลบ', en: 'Remove' })}</button>
+        </td>
       </tr>`
     )
     .join('');
@@ -246,13 +249,11 @@ function renderSkillsStep(state) {
       <thead><tr>
         <th>${bilingual({ th: 'ภาษา', en: 'Language' })}</th>
         ${ratingColumnHeader({ th: 'ความสามารถโดยรวม', en: 'Overall Ability' })}
-        <th></th>
       </tr></thead>
       <tbody>
         <tr>
           <td>${bilingual({ th: 'ภาษาอังกฤษ', en: 'English' })}</td>
           <td><div class="rating-group">${renderRatingRadios('skills.languages.english.overall', lang.english.overall)}</div></td>
-          <td></td>
         </tr>
         ${additionalLangRows}
       </tbody>
@@ -273,7 +274,7 @@ function renderSkillsStep(state) {
 
   const appsSection = canUseComputer
     ? `<div class="subsection">
-      <h3>${bilingual({ th: 'ความสามารถในการใช้งานคอมพิวเตอร์', en: 'Computer Application Skills' })} <small class="rating-legend">${bilingual(SFGFormSchema.RATING_LEGEND)}</small></h3>
+      <h3>${bilingual({ th: 'ความสามารถในการใช้งานคอมพิวเตอร์', en: 'Computer Application Skills' })}</h3>
       <div class="computer-apps-list">
       ${SFGFormSchema.COMPUTER_APPS.map((app) => {
         const appState = state.skills.computer.apps[app.value] || { rating: '' };

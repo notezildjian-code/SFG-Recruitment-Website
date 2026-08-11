@@ -23,8 +23,6 @@ const COMPUTER_APPS = [
   { value: 'gemini', label: { th: 'Gemini', en: 'Gemini' } },
 ];
 
-const RATING_LEGEND = { th: '(ดีมาก<--------->แย่)', en: '(Excellent<--------->Poor)' };
-
 const DOCUMENT_CHECKLIST_ITEMS = [
   { value: 'photo', label: { th: 'รูปถ่าย', en: 'Photo' } },
   { value: 'employmentLetter', label: { th: 'หนังสือรับรองการทำงาน', en: 'Employment Letter' } },
@@ -61,11 +59,11 @@ const MILITARY_OPTIONS = [
 ];
 
 const RATING_OPTIONS = [
-  { value: '5', label: { th: 'ดีเยี่ยม', en: 'Excellent' } },
-  { value: '4', label: { th: 'ดีมาก', en: 'Very Good' } },
-  { value: '3', label: { th: 'ดี', en: 'Good' } },
-  { value: '2', label: { th: 'พอใช้', en: 'Fair' } },
-  { value: '1', label: { th: 'แย่', en: 'Poor' } },
+  { value: '5', label: { th: 'ดีมาก', en: 'Excellent' } },
+  { value: '4', label: { th: 'ดี', en: 'Good' } },
+  { value: '3', label: { th: 'พอใช้', en: 'Fair' } },
+  { value: '2', label: { th: 'แย่', en: 'Poor' } },
+  { value: '1', label: { th: 'ไม่สามารถใช้ได้', en: 'Unable to use' } },
 ];
 
 const YES_NO_OPTIONS = [
@@ -193,6 +191,5 @@ window.SFGFormSchema = {
   MARITAL_OPTIONS,
   MILITARY_OPTIONS,
   RATING_OPTIONS,
-  RATING_LEGEND,
   YES_NO_OPTIONS,
 };

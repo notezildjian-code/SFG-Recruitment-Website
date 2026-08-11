@@ -265,10 +265,24 @@ input[disabled], input[readonly] { background: var(--bg); color: var(--muted); }
 .skills-table th, .skills-table td { border: 1px solid var(--border); padding: 10px; text-align: center; }
 .skills-table th { background: var(--bg); font-family: var(--font-en); }
 
-.rating-group { display: flex; justify-content: center; gap: 6px; }
-.rating-option { cursor: pointer; }
-.rating-option input { accent-color: var(--neptune-blue); margin-right: 2px; }
-.rating-legend { display: block; font-weight: 400; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.rating-group { display: flex; justify-content: center; gap: 8px; }
+.rating-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 52px;
+  cursor: pointer;
+}
+.rating-option input { accent-color: var(--neptune-blue); margin: 0; }
+.rating-option .rating-number { font-weight: 600; }
+.rating-option .rating-word {
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--muted);
+  text-align: center;
+  white-space: normal;
+}
 
 .computer-apps-list { display: flex; flex-direction: column; gap: 10px; }
 .computer-app-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
