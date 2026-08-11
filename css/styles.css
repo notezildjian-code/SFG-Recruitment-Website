@@ -275,7 +275,6 @@ input[disabled], input[readonly] { background: var(--bg); color: var(--muted); }
   cursor: pointer;
 }
 .rating-option input { accent-color: var(--neptune-blue); margin: 0; }
-.rating-option .rating-number { font-weight: 600; }
 .rating-option .rating-word {
   font-size: 10px;
   line-height: 1.2;

@@ -218,7 +218,6 @@ function renderRatingRadios(path, value) {
   return SFGFormSchema.RATING_OPTIONS.map(
     (opt) => `<label class="rating-option">
       <input type="radio" name="${path}" value="${opt.value}" data-path="${path}" ${value === opt.value ? 'checked' : ''} />
-      <span class="rating-number">${opt.value}</span>
       <span class="rating-word">${bilingual(opt.label)}</span>
     </label>`
   ).join('');
