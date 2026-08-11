@@ -127,6 +127,8 @@ body {
 .field-label { font-size: 14px; font-weight: 600; }
 .required-mark { color: var(--jupiter-orange); margin-left: 4px; }
 
+.dob-select-group { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 8px; }
+
 input[type="text"], input[type="tel"], input[type="email"], input[type="number"],
 input[type="date"], textarea, select {
   width: 100%;

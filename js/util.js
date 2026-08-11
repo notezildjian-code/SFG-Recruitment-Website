@@ -46,6 +46,18 @@ function bilingualPlain(label) {
   return label[lang] != null ? label[lang] : label.th;
 }
 
+// day/month are always plain numbers; yearDisplay is whatever the user picked in the
+// active UI language (พ.ศ. when Thai, ค.ศ. when English) -- convert back to a real
+// Gregorian ISO date so calculateAge() and the backend keep working unchanged.
+function composeDobISO(day, month, yearDisplay) {
+  if (!day || !month || !yearDisplay) return '';
+  const lang = window.SFG_LANG === 'en' ? 'en' : 'th';
+  const adYear = lang === 'th' ? Number(yearDisplay) - 543 : Number(yearDisplay);
+  const mm = String(month).padStart(2, '0');
+  const dd = String(day).padStart(2, '0');
+  return `${adYear}-${mm}-${dd}`;
+}
+
 function calculateAge(dateStr) {
   if (!dateStr) return '';
   const dob = new Date(dateStr);

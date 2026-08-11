@@ -49,7 +49,50 @@ function renderInput(field, state) {
     return `<textarea ${commonAttrs} rows="3">${escapeHtml(value || '')}</textarea>`;
   }
 
+  if (field.type === 'dob') {
+    return renderDobInputs(state);
+  }
+
   return `<input type="${field.type}" ${commonAttrs} value="${escapeHtml(value || '')}" ${field.pattern ? `pattern="${field.pattern}"` : ''} ${field.readonly ? 'readonly' : ''} />`;
+}
+
+const MONTH_NAMES = {
+  th: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
+  en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+};
+
+// Renders separate day/month/year dropdowns instead of a native date input so the year
+// list can show พ.ศ. (Buddhist Era) in Thai and ค.ศ. (Anno Domini) in English -- native
+// <input type="date"> always uses the Gregorian calendar and can't be switched per-language.
+function renderDobInputs(state) {
+  const lang = window.SFG_LANG === 'en' ? 'en' : 'th';
+  const day = state.personal.dobDay || '';
+  const month = state.personal.dobMonth || '';
+  const yearDisplay = state.personal.dobYear || '';
+
+  const placeholder = (label) => `<option value="" disabled ${'selected'}>-- ${bilingual(label)} --</option>`;
+
+  const dayOptions = Array.from({ length: 31 }, (_, i) => i + 1)
+    .map((d) => `<option value="${d}" ${String(d) === String(day) ? 'selected' : ''}>${d}</option>`)
+    .join('');
+
+  const monthOptions = MONTH_NAMES[lang]
+    .map((name, i) => `<option value="${i + 1}" ${String(i + 1) === String(month) ? 'selected' : ''}>${name}</option>`)
+    .join('');
+
+  const currentAdYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 56 }, (_, i) => currentAdYear - 15 - i)
+    .map((adYear) => {
+      const displayYear = lang === 'th' ? adYear + 543 : adYear;
+      return `<option value="${displayYear}" ${String(displayYear) === String(yearDisplay) ? 'selected' : ''}>${displayYear}</option>`;
+    })
+    .join('');
+
+  return `<div class="dob-select-group">
+    <select data-path="personal.dobDay" data-trigger="false">${placeholder({ th: 'วัน', en: 'Day' })}${dayOptions}</select>
+    <select data-path="personal.dobMonth" data-trigger="false">${placeholder({ th: 'เดือน', en: 'Month' })}${monthOptions}</select>
+    <select data-path="personal.dobYear" data-trigger="false">${placeholder({ th: lang === 'th' ? 'ปี (พ.ศ.)' : 'Year (A.D.)', en: 'Year (A.D.)' })}${yearOptions}</select>
+  </div>`;
 }
 
 function renderField(field, state) {
@@ -179,7 +222,7 @@ function renderEducationStep(state) {
       <div class="field-grid">
         <div class="field-group"><label class="field-label">${bilingual({ th: 'ระดับวุฒิการศึกษา', en: 'Education Level' })}</label>${renderEducationLevelSelect(`education.${i}.level`, row.level)}</div>
         <div class="field-group"><label class="field-label">${bilingual({ th: 'ชื่อสถาบันการศึกษา', en: 'Institution' })}</label><input type="text" data-path="education.${i}.institution" value="${escapeHtml(row.institution || '')}" /></div>
-        <div class="field-group"><label class="field-label">${bilingual({ th: 'คณะ / สาขา', en: 'Faculty / Major' })}</label><input type="text" data-path="education.${i}.facultyMajor" value="${escapeHtml(row.facultyMajor || '')}" /></div>
+        <div class="field-group"><label class="field-label">${bilingual({ th: 'คณะ/สาขา/หลักสูตร', en: 'Faculty / Major / Program' })}</label><input type="text" data-path="education.${i}.facultyMajor" value="${escapeHtml(row.facultyMajor || '')}" /></div>
         <div class="field-group"><label class="field-label">${bilingual({ th: 'เกรดเฉลี่ย (GPA)', en: 'GPA' })}</label><input type="text" data-path="education.${i}.gpa" value="${escapeHtml(row.gpa || '')}" /></div>
       </div>
       ${state.education.length > 1 ? `<button type="button" class="btn-remove-row" data-remove-repeater="education" data-index="${i}">${bilingual({ th: 'ลบแถว', en: 'Remove' })}</button>` : ''}
@@ -314,9 +357,9 @@ function renderOtherStep(state) {
       (c, i) => `
     <div class="repeater-row" data-repeater="emergencyContacts" data-index="${i}">
       <div class="field-grid">
-        <div class="field-group"><label class="field-label">${bilingual({ th: 'ชื่อ', en: 'Name' })}</label><input type="text" data-path="other.emergencyContacts.${i}.name" value="${escapeHtml(c.name || '')}" /></div>
-        <div class="field-group"><label class="field-label">${bilingual({ th: 'เบอร์โทรศัพท์มือถือ', en: 'Mobile Phone No.' })}</label><input type="tel" data-path="other.emergencyContacts.${i}.mobile" value="${escapeHtml(c.mobile || '')}" /></div>
-        <div class="field-group"><label class="field-label">${bilingual({ th: 'ความสัมพันธ์', en: 'Relationship' })}</label><input type="text" data-path="other.emergencyContacts.${i}.relationship" value="${escapeHtml(c.relationship || '')}" /></div>
+        <div class="field-group"><label class="field-label">${bilingual({ th: 'ชื่อ', en: 'Name' })}${i === 0 ? '<span class="required-mark">*</span>' : ''}</label><input type="text" data-path="other.emergencyContacts.${i}.name" value="${escapeHtml(c.name || '')}" /></div>
+        <div class="field-group"><label class="field-label">${bilingual({ th: 'เบอร์โทรศัพท์มือถือ', en: 'Mobile Phone No.' })}${i === 0 ? '<span class="required-mark">*</span>' : ''}</label><input type="tel" data-path="other.emergencyContacts.${i}.mobile" value="${escapeHtml(c.mobile || '')}" /></div>
+        <div class="field-group"><label class="field-label">${bilingual({ th: 'ความสัมพันธ์', en: 'Relationship' })}${i === 0 ? '<span class="required-mark">*</span>' : ''}</label><input type="text" data-path="other.emergencyContacts.${i}.relationship" value="${escapeHtml(c.relationship || '')}" /></div>
       </div>
       ${contacts.length > 1 ? `<button type="button" class="btn-remove-row" data-remove-repeater="emergencyContacts" data-index="${i}">${bilingual({ th: 'ลบแถว', en: 'Remove' })}</button>` : ''}
     </div>`
@@ -329,6 +372,7 @@ function renderOtherStep(state) {
       <h3>${bilingual({ th: 'ผู้ที่สามารถติดต่อได้ในกรณีฉุกเฉิน', en: 'Emergency Contacts' })}</h3>
       <div id="emergencyContacts-rows">${rows}</div>
       <button type="button" class="btn-add-row" data-add-repeater="emergencyContacts">${bilingual({ th: '+ เพิ่มผู้ติดต่อ', en: '+ Add Contact' })}</button>
+      <div class="field-error" data-error-for="emergencyContacts"></div>
     </div>`;
 }
 

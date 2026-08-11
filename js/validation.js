@@ -34,6 +34,14 @@ function validateStep(step, state) {
     });
   }
 
+  if (step.id === 'other') {
+    const first = state.other.emergencyContacts[0];
+    const filled = first && first.name && first.name.trim() && first.mobile && first.mobile.trim() && first.relationship && first.relationship.trim();
+    if (!filled) {
+      errors.push({ fieldId: 'emergencyContacts', message: { th: 'กรุณากรอกข้อมูลผู้ที่สามารถติดต่อได้ในกรณีฉุกเฉินอย่างน้อย 1 คน', en: 'Please provide at least one emergency contact.' } });
+    }
+  }
+
   if (step.id === 'review') {
     if (!state.consent.consentGiven) {
       errors.push({ fieldId: 'finalConsentCheckbox', message: { th: 'กรุณายืนยันความยินยอมก่อนส่งใบสมัคร', en: 'You must certify and agree before submitting.' } });

@@ -1,7 +1,7 @@
 // Bumped whenever the state shape changes in a backwards-incompatible way.
 // A saved draft from an older version is discarded on load instead of crashing
 // against fields it no longer has (or fields it has that got renamed/removed).
-const SCHEMA_VERSION = 6;
+const SCHEMA_VERSION = 7;
 
 function createInitialState() {
   return {
@@ -14,7 +14,7 @@ function createInitialState() {
     personal: {
       positionApplying: '', positionIsSalesPC: false, positionArea: '', expectedSalary: '',
       namePrefix: '', nameThai: '', nameEnglish: '', nickname: '',
-      gender: '', heightCm: '', weightKg: '', dobBE: '', age: '',
+      gender: '', heightCm: '', weightKg: '', dobBE: '', dobDay: '', dobMonth: '', dobYear: '', age: '',
       idCardNo: '', mobilePhone: '', email: '', lineId: '', address: '', postalCode: '',
       maritalStatus: '', spouseName: '', spouseAge: '', numChildren: '',
       military: { status: '', servedYearBE: '', notYetYearBE: '', exemptOtherReason: '' },
@@ -141,15 +141,22 @@ const App = {
   },
 
   bindAgeAutoCalc(container) {
-    const dobInput = container.querySelector('[data-path="personal.dobBE"]');
-    if (!dobInput) return;
-    dobInput.addEventListener('change', () => {
-      const age = calculateAge(dobInput.value);
+    const dayInput = container.querySelector('[data-path="personal.dobDay"]');
+    const monthInput = container.querySelector('[data-path="personal.dobMonth"]');
+    const yearInput = container.querySelector('[data-path="personal.dobYear"]');
+    if (!dayInput || !monthInput || !yearInput) return;
+
+    const recalc = () => {
+      const iso = composeDobISO(dayInput.value, monthInput.value, yearInput.value);
+      this.state.personal.dobBE = iso;
+      const age = calculateAge(iso);
       this.state.personal.age = age;
       const ageInput = container.querySelector('[data-path="personal.age"]');
       if (ageInput) ageInput.value = age;
       saveDraft(this.state);
-    });
+    };
+
+    [dayInput, monthInput, yearInput].forEach((el) => el.addEventListener('change', recalc));
   },
 
   bindNamePrefixAutoGender(container) {

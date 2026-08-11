@@ -100,7 +100,7 @@ const STEPS = [
     title: { th: '1. ตำแหน่งงานที่ต้องการสมัคร', en: '1. Position Applied For' },
     // position select + conditional area field are custom-rendered (dynamic position list from the backend) — see render.js.
     fields: [
-      { id: 'expectedSalary', path: 'personal.expectedSalary', label: { th: 'เงินเดือนที่ต้องการ (บาท)', en: 'Expected Salary (Baht)' }, type: 'text', required: true },
+      { id: 'expectedSalary', path: 'personal.expectedSalary', label: { th: 'เงินเดือนที่ต้องการ (บาท)', en: 'Expected Salary (Baht)' }, type: 'text' },
     ],
   },
   {
@@ -118,7 +118,7 @@ const STEPS = [
       ] },
       { id: 'heightCm', path: 'personal.heightCm', label: { th: 'ส่วนสูง (ซม.)', en: 'Height (CM)' }, type: 'number' },
       { id: 'weightKg', path: 'personal.weightKg', label: { th: 'น้ำหนัก (กก.)', en: 'Weight (KG)' }, type: 'number' },
-      { id: 'dobBE', path: 'personal.dobBE', label: { th: 'วัน/เดือน/ปีเกิด', en: 'Date of Birth' }, type: 'date', required: true },
+      { id: 'dobBE', path: 'personal.dobBE', label: { th: 'วัน/เดือน/ปีเกิด', en: 'Date of Birth' }, type: 'dob', required: true },
       { id: 'age', path: 'personal.age', label: { th: 'อายุ', en: 'Age' }, type: 'text', readonly: true },
       { id: 'idCardNo', path: 'personal.idCardNo', label: { th: 'เลขที่บัตรประชาชน', en: 'Identity Card No.' }, type: 'text', required: true, pattern: '^[0-9]{13}$', patternError: { th: 'กรอกเลขบัตรประชาชน 13 หลัก', en: 'Enter a 13-digit ID card number' } },
       { id: 'mobilePhone', path: 'personal.mobilePhone', label: { th: 'เบอร์โทรศัพท์มือถือ', en: 'Mobile Phone No.' }, type: 'tel', required: true },
