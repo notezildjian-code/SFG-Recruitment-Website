@@ -7,7 +7,7 @@ var MIN_SUBMIT_MS = 3000;
 
 var APPLICATIONS_HEADERS = [
   'ApplicationID', 'SubmittedAt', 'PositionApplying', 'PositionArea', 'ExpectedSalary', 'NameThai', 'NameEnglish', 'Nickname',
-  'Gender', 'HeightCm', 'WeightKg', 'DobBE', 'Age', 'IdCardNo', 'HomePhone',
+  'Gender', 'HeightCm', 'WeightKg', 'DobBE', 'Age', 'IdCardNo',
   'MobilePhone', 'Email', 'LineId', 'Address', 'PostalCode',
   'MaritalStatus', 'SpouseName', 'SpouseAge', 'NumChildren',
   'MilitaryStatus', 'MilitaryServedYearBE', 'MilitaryNotYetYearBE', 'MilitaryExemptOtherReason',
@@ -134,7 +134,6 @@ function writeApplicationRow(ss, p) {
     DobBE: personal.dobBE,
     Age: personal.age,
     IdCardNo: personal.idCardNo,
-    HomePhone: personal.homePhone,
     MobilePhone: personal.mobilePhone,
     Email: personal.email,
     LineId: personal.lineId,
