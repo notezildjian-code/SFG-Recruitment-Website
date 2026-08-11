@@ -243,6 +243,10 @@ input[disabled], input[readonly] { background: var(--bg); color: var(--muted); }
 .education-row { display: flex; flex-direction: column; gap: 8px; }
 .edu-level-label { font-weight: 600; font-size: 14px; color: var(--neptune-blue); }
 
+.input-with-checkbox { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.input-with-checkbox input[type="text"] { flex: 1; min-width: 100px; }
+.input-with-checkbox .checkbox-inline { white-space: nowrap; }
+
 .btn-add-row, .btn-remove-row {
   border: 1px dashed var(--neptune-blue);
   background: transparent;

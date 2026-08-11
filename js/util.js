@@ -56,3 +56,41 @@ function calculateAge(dateStr) {
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) age--;
   return age >= 0 ? String(age) : '';
 }
+
+function parseMonthYear(str) {
+  const m = /^\s*(\d{1,2})\s*\/\s*(\d{4})\s*$/.exec(str || '');
+  if (!m) return null;
+  const month = parseInt(m[1], 10);
+  const year = parseInt(m[2], 10);
+  if (month < 1 || month > 12) return null;
+  return { month, year };
+}
+
+// Mirrors calculateAge's UX: computed from free-text "MM/YYYY" fields, blank when
+// either end is unparsable or "to" precedes "from".
+function calculateWorkDuration(fromStr, toStr, isCurrent) {
+  const from = parseMonthYear(fromStr);
+  if (!from) return '';
+  let toMonth, toYear;
+  if (isCurrent) {
+    const now = new Date();
+    toMonth = now.getMonth() + 1;
+    toYear = now.getFullYear();
+  } else {
+    const to = parseMonthYear(toStr);
+    if (!to) return '';
+    toMonth = to.month;
+    toYear = to.year;
+  }
+  const totalMonths = (toYear - from.year) * 12 + (toMonth - from.month);
+  if (totalMonths < 0) return '';
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+  const lang = window.SFG_LANG === 'en' ? 'en' : 'th';
+  const yearWord = lang === 'en' ? (years === 1 ? 'year' : 'years') : 'ปี';
+  const monthWord = lang === 'en' ? (months === 1 ? 'month' : 'months') : 'เดือน';
+  const parts = [];
+  if (years > 0) parts.push(`${years} ${yearWord}`);
+  if (months > 0 || years === 0) parts.push(`${months} ${monthWord}`);
+  return parts.join(' ');
+}

@@ -29,7 +29,7 @@ var APPLICATIONS_HEADERS = [
 ];
 
 var EDUCATION_HEADERS = ['ApplicationID', 'Level', 'Institution', 'FacultyMajor', 'GPA'];
-var WORKHISTORY_HEADERS = ['ApplicationID', 'From', 'To', 'Employer', 'Position', 'LastSalary', 'Responsibilities', 'ReasonForLeaving'];
+var WORKHISTORY_HEADERS = ['ApplicationID', 'From', 'To', 'IsCurrent', 'Duration', 'Employer', 'Position', 'LastSalary', 'Responsibilities', 'ReasonForLeaving'];
 var EMERGENCY_HEADERS = ['ApplicationID', 'Name', 'Mobile', 'Relationship'];
 var ADDITIONAL_LANGUAGES_HEADERS = ['ApplicationID', 'Name', 'Overall'];
 var ADDITIONAL_APPS_HEADERS = ['ApplicationID', 'AppName', 'Rating'];
@@ -79,7 +79,7 @@ function doPost(e) {
       return { ApplicationID: payload.applicationId, Level: row.level, Institution: row.institution, FacultyMajor: row.facultyMajor, GPA: row.gpa };
     });
     writeChildRows(ss, 'WorkHistory', WORKHISTORY_HEADERS, payload.applicationId, payload.workHistory, function (row) {
-      return { ApplicationID: payload.applicationId, From: row.from, To: row.to, Employer: row.employer, Position: row.position, LastSalary: row.lastSalary, Responsibilities: row.responsibilities, ReasonForLeaving: row.reasonForLeaving };
+      return { ApplicationID: payload.applicationId, From: row.from, To: row.to, IsCurrent: row.isCurrent ? 'Yes' : 'No', Duration: row.duration, Employer: row.employer, Position: row.position, LastSalary: row.lastSalary, Responsibilities: row.responsibilities, ReasonForLeaving: row.reasonForLeaving };
     });
     writeChildRows(ss, 'EmergencyContacts', EMERGENCY_HEADERS, payload.applicationId, payload.other.emergencyContacts, function (row) {
       return { ApplicationID: payload.applicationId, Name: row.name, Mobile: row.mobile, Relationship: row.relationship };

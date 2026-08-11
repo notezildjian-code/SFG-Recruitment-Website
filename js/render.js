@@ -198,7 +198,14 @@ function renderWorkHistoryStep(state) {
     <div class="repeater-row" data-repeater="workHistory" data-index="${i}">
       <div class="field-grid">
         <div class="field-group"><label class="field-label">${bilingual({ th: 'จากเดือน/ปี', en: 'From (Month/Year)' })}</label><input type="text" placeholder="MM/YYYY" data-path="workHistory.${i}.from" value="${escapeHtml(row.from || '')}" /></div>
-        <div class="field-group"><label class="field-label">${bilingual({ th: 'ถึงเดือน/ปี', en: 'To (Month/Year)' })}</label><input type="text" placeholder="MM/YYYY" data-path="workHistory.${i}.to" value="${escapeHtml(row.to || '')}" /></div>
+        <div class="field-group">
+          <label class="field-label">${bilingual({ th: 'ถึงเดือน/ปี', en: 'To (Month/Year)' })}</label>
+          <div class="input-with-checkbox">
+            <input type="text" placeholder="MM/YYYY" data-path="workHistory.${i}.to" value="${escapeHtml(row.to || '')}" ${row.isCurrent ? 'disabled' : ''} />
+            <label class="checkbox-inline"><input type="checkbox" data-path="workHistory.${i}.isCurrent" ${row.isCurrent ? 'checked' : ''} />${bilingual({ th: 'ถึงปัจจุบัน', en: 'Present' })}</label>
+          </div>
+        </div>
+        <div class="field-group"><label class="field-label">${bilingual({ th: 'อายุงาน', en: 'Duration' })}</label><input type="text" data-path="workHistory.${i}.duration" value="${escapeHtml(row.duration || '')}" readonly /></div>
         <div class="field-group field-full"><label class="field-label">${bilingual({ th: 'ชื่อนายจ้าง / บริษัท', en: "Employer's Name" })}</label><input type="text" data-path="workHistory.${i}.employer" value="${escapeHtml(row.employer || '')}" /></div>
         <div class="field-group"><label class="field-label">${bilingual({ th: 'ตำแหน่ง', en: 'Position' })}</label><input type="text" data-path="workHistory.${i}.position" value="${escapeHtml(row.position || '')}" /></div>
         <div class="field-group"><label class="field-label">${bilingual({ th: 'เงินเดือนสุดท้าย', en: 'Last Salary' })}</label><input type="text" data-path="workHistory.${i}.lastSalary" value="${escapeHtml(row.lastSalary || '')}" /></div>

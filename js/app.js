@@ -20,7 +20,7 @@ function createInitialState() {
       military: { status: '', servedYearBE: '', notYetYearBE: '', exemptOtherReason: '' },
     },
     education: [{ level: '', institution: '', facultyMajor: '', gpa: '' }],
-    workHistory: [{ from: '', to: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' }],
+    workHistory: [{ from: '', to: '', isCurrent: false, duration: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' }],
     skills: {
       languages: {
         english: { overall: '', testResult: '' },
@@ -120,6 +120,7 @@ const App = {
     this.bindNav();
     if (step.id === 'language') this.bindLanguageStep(stepContainer);
     if (step.id === 'personal') this.bindAgeAutoCalc(stepContainer);
+    if (step.id === 'workHistory') this.bindWorkHistoryAutoCalc(stepContainer);
     if (step.id === 'review') this.bindReview(stepContainer);
     if (step.id === 'consentGate') this.bindConsentGate(stepContainer);
   },
@@ -145,6 +146,39 @@ const App = {
       const ageInput = container.querySelector('[data-path="personal.age"]');
       if (ageInput) ageInput.value = age;
       saveDraft(this.state);
+    });
+  },
+
+  bindWorkHistoryAutoCalc(container) {
+    container.querySelectorAll('[data-repeater="workHistory"]').forEach((row) => {
+      const index = Number(row.getAttribute('data-index'));
+      const entry = this.state.workHistory[index];
+      const fromInput = row.querySelector(`[data-path="workHistory.${index}.from"]`);
+      const toInput = row.querySelector(`[data-path="workHistory.${index}.to"]`);
+      const currentCheckbox = row.querySelector(`[data-path="workHistory.${index}.isCurrent"]`);
+      const durationInput = row.querySelector(`[data-path="workHistory.${index}.duration"]`);
+
+      const recalc = () => {
+        entry.duration = calculateWorkDuration(entry.from, entry.to, entry.isCurrent);
+        if (durationInput) durationInput.value = entry.duration;
+        saveDraft(this.state);
+      };
+
+      if (fromInput) fromInput.addEventListener('change', recalc);
+      if (toInput) toInput.addEventListener('change', recalc);
+      if (currentCheckbox) {
+        currentCheckbox.addEventListener('change', () => {
+          entry.isCurrent = currentCheckbox.checked;
+          if (toInput) {
+            toInput.disabled = entry.isCurrent;
+            if (entry.isCurrent) {
+              entry.to = '';
+              toInput.value = '';
+            }
+          }
+          recalc();
+        });
+      }
     });
   },
 
@@ -177,7 +211,7 @@ const App = {
       btn.addEventListener('click', () => {
         const key = btn.getAttribute('data-add-repeater');
         if (key === 'education') this.state.education.push({ level: '', institution: '', facultyMajor: '', gpa: '' });
-        if (key === 'workHistory') this.state.workHistory.push({ from: '', to: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' });
+        if (key === 'workHistory') this.state.workHistory.push({ from: '', to: '', isCurrent: false, duration: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' });
         if (key === 'emergencyContacts') this.state.other.emergencyContacts.push({ name: '', mobile: '', relationship: '' });
         if (key === 'additionalLanguages') this.state.skills.languages.additional.push({ name: '', overall: '' });
         if (key === 'additionalApps') this.state.skills.computer.additionalApps.push({ name: '', rating: '' });
