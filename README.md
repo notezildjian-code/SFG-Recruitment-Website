@@ -102,10 +102,26 @@ at `https://<your-org>.github.io/<repo>/admin.html`.
    (they must match exactly, or every admin action will be rejected with `invalid_audience`.)
 3. In `apps-script/Code.gs`, confirm `ADMIN_EMAIL` is set to the Google account that should have
    access (currently `annop.p@sfg-th.com`). Only that exact email can sign in.
-4. Redeploy the Apps Script (see "Redeploying after edits" below) — this manifest change adds an
-   `oauthScopes` array, so Google will show a **new consent/authorization screen** (including an
-   "unverified app" warning, expected for an internal script) that you have to click through
-   yourself.
+4. Redeploy the Apps Script (see "Redeploying after edits" below). This manifest change adds an
+   `oauthScopes` array — **deploying does NOT prompt for the new permission**, it succeeds
+   silently. The new scope is only enforced at runtime, and since the web app always runs as the
+   *deploying* Google account (not whoever signs into `admin.html`), you'll hit this error the
+   first time any admin action runs:
+   ```
+   Exception: You do not have permission to call UrlFetchApp.fetch. Required permissions:
+   https://www.googleapis.com/auth/script.external_request
+   ```
+   **Fix — grant the scope manually in the Apps Script editor** (one-time, only needed again if
+   you add more scopes later):
+   1. In `Code.gs`, temporarily add: `function testAuthGrant() { UrlFetchApp.fetch('https://www.google.com'); }`
+   2. Save. In the toolbar, select `testAuthGrant` from the function dropdown (next to ▶ Run —
+      confirm it actually shows `testAuthGrant`, it can silently revert to `doGet`) and click Run.
+   3. The execution log shows a permission error with a **"Review permissions"** button — click
+      it, then in the new tab: **Advanced** → **Go to [project name] (unsafe)** → **Continue** on
+      the scope summary screen. The tab closes itself when done.
+   4. Re-run `testAuthGrant` to confirm it now succeeds, then delete the function and save.
+   This grant is tied to the deploying Google account + this Apps Script project, not to any
+   specific deployed version — no further redeploy is needed after granting it.
 5. Open `admin.html`, sign in with the allowed Google account, and confirm the dashboard loads.
 
 ### Security notes
