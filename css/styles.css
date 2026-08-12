@@ -184,6 +184,14 @@ input[disabled], input[readonly] { background: var(--bg); color: var(--muted); }
   min-height: 14px;
 }
 
+.field-error:not(:empty) {
+  margin-top: 4px;
+  padding: 4px 8px;
+  font-weight: 600;
+  background: rgba(220, 53, 69, 0.08);
+  border-left: 3px solid var(--error);
+}
+
 .has-error input, .has-error textarea { border-color: var(--error); }
 
 /* Radio groups */
