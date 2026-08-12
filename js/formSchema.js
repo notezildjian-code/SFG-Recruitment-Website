@@ -86,6 +86,7 @@ const STEPS = [
   {
     id: 'positionSalary',
     title: { th: '1. ตำแหน่งงานที่ต้องการสมัคร', en: '1. Position Applied For' },
+    tabLabel: { th: 'ตำแหน่งงาน', en: 'Position' },
     // position select + conditional area field are custom-rendered (dynamic position list from the backend) — see render.js.
     fields: [
       { id: 'expectedSalary', path: 'personal.expectedSalary', label: { th: 'เงินเดือนที่ต้องการ (บาท)', en: 'Expected Salary (Baht)' }, type: 'text' },
@@ -133,7 +134,7 @@ const STEPS = [
   {
     id: 'workHistory',
     title: { th: '4. ประวัติการทำงาน/ฝึกงาน', en: '4. Working Record / Internship' },
-    tabLabel: { th: 'ประวัติการทำงาน', en: 'Work History' },
+    tabLabel: { th: 'การทำงาน/ฝึกงาน', en: 'Work History' },
     dynamicRepeater: 'workHistory',
   },
   {
