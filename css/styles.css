@@ -338,6 +338,10 @@ input[disabled], input[readonly] { background: var(--bg); color: var(--muted); }
 .review-label { color: var(--muted); }
 .review-value { font-weight: 600; text-align: right; }
 
+.review-subitem { background: var(--bg); border-radius: 8px; padding: 4px 12px; margin-bottom: 10px; }
+.review-subitem:last-child { margin-bottom: 0; }
+.review-subitem .review-row:last-child { border-bottom: none; }
+
 .doc-checklist { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
 .doc-checklist-item { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .doc-checklist-item input[type="file"] { font-size: 12px; }

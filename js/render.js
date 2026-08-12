@@ -415,6 +415,136 @@ function attachmentNote(state, documentType) {
   return att ? `<span class="file-attached-note">${escapeHtml(att.fileName)} (${Math.round(att.sizeBytes / 1024)} KB)</span>` : '';
 }
 
+function reviewStepTitle(id) {
+  return SFGFormSchema.STEPS.find((s) => s.id === id).title;
+}
+
+function reviewOptionLabel(stepId, fieldId, value) {
+  if (value == null || value === '') return '';
+  const step = SFGFormSchema.STEPS.find((s) => s.id === stepId);
+  const field = step && step.fields && step.fields.find((f) => f.id === fieldId);
+  const opt = field && field.options && field.options.find((o) => o.value === value);
+  return opt ? bilingualPlain(opt.label) : value;
+}
+
+function reviewEducationLevelLabel(value) {
+  const opt = SFGFormSchema.EDUCATION_LEVELS.find((o) => o.value === value);
+  return opt ? bilingualPlain(opt.label) : value || '';
+}
+
+function reviewRatingLabel(value) {
+  const opt = SFGFormSchema.RATING_OPTIONS.find((o) => o.value === value);
+  return opt ? bilingualPlain(opt.label) : value || '';
+}
+
+function reviewEducationSummary(state) {
+  const rows = state.education
+    .filter((row) => row.level || row.institution || row.facultyMajor || row.gpa)
+    .map(
+      (row) => `<div class="review-subitem">
+      ${reviewRow({ th: 'ระดับวุฒิการศึกษา', en: 'Education Level' }, reviewEducationLevelLabel(row.level))}
+      ${reviewRow({ th: 'สถาบัน', en: 'Institution' }, row.institution)}
+      ${reviewRow({ th: 'คณะ/สาขา/หลักสูตร', en: 'Faculty / Major' }, row.facultyMajor)}
+      ${reviewRow({ th: 'GPA', en: 'GPA' }, row.gpa)}
+    </div>`
+    )
+    .join('');
+  return rows || `<p class="step-hint">${bilingual({ th: 'ไม่ได้กรอกข้อมูล', en: 'Not provided' })}</p>`;
+}
+
+function reviewWorkHistorySummary(state) {
+  const rows = state.workHistory
+    .filter((row) => row.employer || row.position || row.from)
+    .map((row) => {
+      const period = `${row.from || '-'} - ${row.isCurrent ? bilingualPlain({ th: 'ปัจจุบัน', en: 'Present' }) : row.to || '-'}`;
+      return `<div class="review-subitem">
+      ${reviewRow({ th: 'ช่วงเวลาทำงาน', en: 'Employment Period' }, period)}
+      ${reviewRow({ th: 'อายุงาน', en: 'Duration' }, row.duration)}
+      ${reviewRow({ th: 'ชื่อนายจ้าง / บริษัท', en: "Employer's Name" }, row.employer)}
+      ${reviewRow({ th: 'ตำแหน่ง', en: 'Position' }, row.position)}
+      ${reviewRow({ th: 'เงินเดือนสุดท้าย', en: 'Last Salary' }, row.lastSalary)}
+      ${reviewRow({ th: 'หน้าที่ความรับผิดชอบ', en: 'Responsibilities' }, row.responsibilities)}
+      ${reviewRow({ th: 'เหตุผลที่ลาออก/สิ้นสุดการทำงาน', en: 'Reason for Leaving' }, row.reasonForLeaving)}
+    </div>`;
+    })
+    .join('');
+  return rows || `<p class="step-hint">${bilingual({ th: 'ไม่ได้กรอกข้อมูล', en: 'Not provided' })}</p>`;
+}
+
+function reviewSkillsSummary(state) {
+  const lang = state.skills.languages;
+  const langRows = [
+    reviewRow({ th: 'ภาษาอังกฤษ', en: 'English' }, reviewRatingLabel(lang.english.overall)),
+    ...(lang.additional || []).map((row) => reviewRow({ th: row.name || '', en: row.name || '' }, reviewRatingLabel(row.overall))),
+  ].join('');
+
+  const canUseComputer = state.skills.computer.canUse === 'yes';
+  let computerSection = reviewRow(
+    { th: 'ความสามารถในการใช้คอมพิวเตอร์', en: 'Computer Abilities' },
+    reviewOptionLabel('skills', 'canUseComputer', state.skills.computer.canUse)
+  );
+  if (canUseComputer) {
+    const appRows = SFGFormSchema.COMPUTER_APPS.filter((app) => (state.skills.computer.apps[app.value] || {}).rating)
+      .map((app) => reviewRow(app.label, reviewRatingLabel(state.skills.computer.apps[app.value].rating)))
+      .join('');
+    const additionalAppRows = (state.skills.computer.additionalApps || [])
+      .filter((row) => row.name)
+      .map((row) => reviewRow({ th: row.name, en: row.name }, reviewRatingLabel(row.rating)))
+      .join('');
+    computerSection += appRows + additionalAppRows;
+  }
+
+  return `<div class="review-subitem">${langRows}</div><div class="review-subitem">${computerSection}</div>`;
+}
+
+function reviewHealthSummary(state) {
+  const h = state.health;
+  const rows = [
+    reviewRow({ th: 'เจ็บป่วย/โรคติดต่อร้ายแรง', en: 'Illness / contagious disease' }, reviewOptionLabel('health', 'illnessYn', h.illness.yn)),
+    reviewRow({ th: 'โปรดระบุ', en: 'Please specify' }, h.illness.yn === 'yes' ? h.illness.specify : ''),
+    reviewRow({ th: 'โรคประจำตัว', en: 'Chronic disease' }, reviewOptionLabel('health', 'chronicYn', h.chronicDisease.yn)),
+    reviewRow({ th: 'โปรดระบุ', en: 'Please specify' }, h.chronicDisease.yn === 'yes' ? h.chronicDisease.specify : ''),
+    reviewRow({ th: 'ความบกพร่อง/ความพิการทางร่างกาย', en: 'Physical disability' }, reviewOptionLabel('health', 'disabilityYn', h.disability.yn)),
+    reviewRow({ th: 'โปรดระบุ', en: 'Please specify' }, h.disability.yn === 'yes' ? h.disability.specify : ''),
+  ];
+  if (state.personal.gender === 'F' || state.personal.gender === 'LGBTQ+') {
+    rows.push(reviewRow({ th: 'ตั้งครรภ์', en: 'Pregnant' }, reviewOptionLabel('health', 'pregnantYn', h.pregnant.yn)));
+    if (h.pregnant.yn === 'yes') {
+      rows.push(reviewRow({ th: 'อายุครรภ์', en: 'Pregnancy duration' }, reviewOptionLabel('health', 'pregnantSpecify', h.pregnant.specify)));
+    }
+  }
+  return rows.join('');
+}
+
+function reviewOtherSummary(state) {
+  const o = state.other;
+  const rows = [reviewRow({ th: 'ท่านทราบว่ามีตำแหน่งงานว่างจากที่ใด', en: 'Source of Posting' }, reviewOptionLabel('other', 'sourceOfPosting', o.sourceOfPosting))];
+  if (o.sourceOfPosting === 'other') rows.push(reviewRow({ th: 'โปรดระบุ', en: 'Please specify' }, o.sourceOfPostingSpecify));
+  if (o.sourceOfPosting === 'employee') rows.push(reviewRow({ th: 'ชื่อพนักงานที่แนะนำ', en: 'Referred by' }, o.referredBy));
+  rows.push(reviewRow({ th: 'เคยต้องโทษ/พัวพันคดีแพ่งหรืออาญา', en: 'Civil/criminal offense' }, reviewOptionLabel('other', 'criminalYn', o.criminalRecord.yn)));
+  if (o.criminalRecord.yn === 'yes') rows.push(reviewRow({ th: 'โปรดระบุ', en: 'Please specify' }, o.criminalRecord.specify));
+  rows.push(
+    reviewRow({ th: 'เคยสมัคร/เป็นพนักงาน SFG มาก่อน', en: 'Previously applied/worked at SFG' }, reviewOptionLabel('other', 'previousSfgYn', o.previousSFG.yn))
+  );
+  if (o.previousSFG.yn === 'yes') rows.push(reviewRow({ th: 'โปรดระบุ', en: 'Please specify' }, o.previousSFG.specify));
+  rows.push(reviewRow({ th: 'ยินดีไปปฏิบัติงานต่างจังหวัด/ต่างประเทศ', en: 'Willing to relocate' }, reviewOptionLabel('other', 'willingToRelocate', o.willingToRelocate)));
+
+  const contactRows = (o.emergencyContacts || [])
+    .filter((c) => c.name || c.mobile || c.relationship)
+    .map(
+      (c) => `<div class="review-subitem">
+      ${reviewRow({ th: 'ชื่อ', en: 'Name' }, c.name)}
+      ${reviewRow({ th: 'เบอร์โทรศัพท์มือถือ', en: 'Mobile Phone' }, c.mobile)}
+      ${reviewRow({ th: 'ความสัมพันธ์', en: 'Relationship' }, c.relationship)}
+    </div>`
+    )
+    .join('');
+
+  return `${rows.join('')}
+    <h4>${bilingual({ th: 'ผู้ที่สามารถติดต่อได้ในกรณีฉุกเฉิน', en: 'Emergency Contacts' })}</h4>
+    ${contactRows}`;
+}
+
 function renderReviewStep(state) {
   const p = state.personal;
 
@@ -448,15 +578,26 @@ function renderReviewStep(state) {
       ${reviewRow({ th: 'อีเมล', en: 'Email' }, p.email)}
     </div>
     <div class="review-section">
-      <h3>${bilingual({ th: '3-7. ข้อมูลอื่น ๆ', en: '3-7. Other Sections' })}</h3>
-      <p class="step-hint">${bilingual({ th: 'ระดับการศึกษา ประวัติการทำงาน ทักษะ สุขภาพ และข้อมูลอื่น ๆ ที่กรอกไว้จะถูกส่งไปพร้อมใบสมัครนี้', en: 'Education, work history, skills, health, and other information you entered will be submitted with this application.' })}</p>
+      <h3>${bilingual(reviewStepTitle('education'))}</h3>
+      ${reviewEducationSummary(state)}
+    </div>
+    <div class="review-section">
+      <h3>${bilingual(reviewStepTitle('workHistory'))}</h3>
+      ${reviewWorkHistorySummary(state)}
+    </div>
+    <div class="review-section">
+      <h3>${bilingual(reviewStepTitle('skills'))}</h3>
+      ${reviewSkillsSummary(state)}
+    </div>
+    <div class="review-section">
+      <h3>${bilingual(reviewStepTitle('health'))}</h3>
+      ${reviewHealthSummary(state)}
+    </div>
+    <div class="review-section">
+      <h3>${bilingual(reviewStepTitle('other'))}</h3>
+      ${reviewOtherSummary(state)}
     </div>
     <div class="review-section consent-final">
-      <h3>${bilingual({ th: '8. การยินยอมเปิดเผยและให้ข้อมูลส่วนตัว', en: '8. Disclosure of Personal Information' })}</h3>
-      <p class="consent-text">${bilingual({
-        th: 'ในการสมัครงานครั้งนี้ ข้าพเจ้ายินยอมเปิดเผยและให้ข้อมูลส่วนตัว อาทิเช่น ข้อมูลส่วนบุคคล การศึกษา ประวัติการทำงาน สุขภาพอนามัย ตลอดจนข้อมูลอื่น ๆ ให้กับบริษัท เพื่อใช้ในการติดต่อกับข้าพเจ้า หรือเพื่อพิจารณาในการสมัครงาน หรือเพื่อประโยชน์โดยชอบด้วยกฎหมาย หรือเพื่อปฏิบัติตามกฎหมาย หรือข้อยกเว้นตามกฎหมาย ไม่ว่าตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล หรือกฎหมายใด',
-        en: 'In applying for this position, I consent to disclose and provide my personal information, such as personal data, education, work history, health information, and other information, to the company for the purpose of contacting me, considering my job application, for legitimate interest, for legal compliance, or as otherwise permitted by law, whether under the Personal Data Protection Act or any other law.',
-      })}</p>
       <div class="subsection">
         <h4>${bilingual({ th: 'เอกสารแนบ', en: 'Attachments' })}</h4>
         <p class="step-hint">${bilingual({ th: 'รองรับไฟล์ประเภท .JPG, .PNG, .DOC, .DOCX, .XLS, .XLSX และ .PDF เท่านั้น', en: 'Supported file types: .JPG, .PNG, .DOC, .DOCX, .XLS, .XLSX and .PDF only.' })}</p>
@@ -491,7 +632,7 @@ function renderReviewStep(state) {
       </div>
       <label class="consent-checkbox">
         <input type="checkbox" id="finalConsentCheckbox" ${state.consent.consentGiven ? 'checked' : ''} />
-        <span>${bilingual({ th: 'ข้าพเจ้ายืนยันว่าข้อมูลทั้งหมดเป็นความจริง และยินยอมตามข้อความข้างต้น', en: 'I certify the above is true and I agree to the statement above.' })}</span>
+        <span>${bilingual({ th: 'ข้าพเจ้ายืนยันว่าข้อมูลที่กรอกไว้ทั้งหมดเป็นความจริงและถูกต้องทุกประการ', en: 'I certify that all the information I have provided is true and correct.' })}</span>
       </label>
       <div class="field-error" data-error-for="finalConsentCheckbox"></div>
     </div>
