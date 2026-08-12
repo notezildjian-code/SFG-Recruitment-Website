@@ -7,7 +7,7 @@ var MIN_SUBMIT_MS = 3000;
 
 // Set after creating an OAuth Client ID in Google Cloud Console (see README.md) --
 // used to verify the admin page's Google Sign-In ID token is meant for this app.
-var GOOGLE_CLIENT_ID = 'REPLACE_WITH_YOUR_OAUTH_CLIENT_ID.apps.googleusercontent.com';
+var GOOGLE_CLIENT_ID = '883984622748-7maldegseaqpoho9emoi8c77ql1qob3a.apps.googleusercontent.com';
 var ADMIN_EMAIL = 'annop.p@sfg-th.com';
 
 // Every applicant is ONE row on the Applications sheet. Repeatable sections (education,

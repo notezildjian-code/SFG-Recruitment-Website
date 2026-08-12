@@ -3,5 +3,5 @@
 // apps-script/Code.gs exactly, or Sign-In will succeed but every admin action will be
 // rejected with "invalid_audience".
 window.SFG_ADMIN_CONFIG = {
-  GOOGLE_CLIENT_ID: 'REPLACE_WITH_YOUR_OAUTH_CLIENT_ID.apps.googleusercontent.com',
+  GOOGLE_CLIENT_ID: '883984622748-7maldegseaqpoho9emoi8c77ql1qob3a.apps.googleusercontent.com',
 };
