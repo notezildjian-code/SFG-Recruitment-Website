@@ -339,6 +339,7 @@ const App = {
         <p>${bilingual({ th: 'ขอบคุณที่สนใจร่วมงานกับเรา ทีมงานจะติดต่อกลับหากคุณสมบัติตรงกับตำแหน่งที่เปิดรับ', en: 'Thank you for your interest. Our team will contact you if your profile matches an open position.' })}</p>
       </div>`;
       document.getElementById('progress-container').innerHTML = '';
+      document.getElementById('nav-container').innerHTML = '';
     } else {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Submit';
