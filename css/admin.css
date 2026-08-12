@@ -1,0 +1,55 @@
+/* Admin-only styles, loaded only by admin.html. Reuses the public form's CSS variables
+   and .step-card/.review-* classes from styles.css for visual consistency. */
+
+.admin-main { max-width: 960px; }
+
+.admin-signin-card { text-align: center; }
+.admin-signin-card #g_id_signin { display: inline-block; margin: 16px 0; }
+
+.admin-topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px; gap: 12px; flex-wrap: wrap;
+}
+
+.admin-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+.admin-tab {
+  border: none; background: transparent; padding: 10px 18px; font-size: 14px; font-weight: 600;
+  color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
+}
+.admin-tab.active { color: var(--neptune-blue); border-bottom-color: var(--jupiter-orange); }
+
+.admin-tab-panel { margin-bottom: 24px; }
+
+.admin-inline-form { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.admin-inline-form input[type="text"] {
+  flex: 1; min-width: 200px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;
+}
+
+.admin-status { min-height: 20px; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+
+.admin-toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.admin-search {
+  flex: 1; min-width: 200px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;
+}
+
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.admin-table th, .admin-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.admin-table th { color: var(--muted); font-weight: 600; }
+.admin-clickable-row { cursor: pointer; }
+.admin-clickable-row:hover { background: var(--bg); }
+
+.admin-badge { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.admin-badge-open { background: rgba(46, 139, 87, 0.12); color: var(--success); }
+.admin-badge-closed { background: rgba(214, 73, 29, 0.1); color: var(--error); }
+
+.admin-row-actions { display: flex; gap: 8px; white-space: nowrap; }
+.admin-btn-small { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+
+.admin-subtext { color: var(--muted); font-size: 12px; }
+
+.admin-detail { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--border); }
+
+@media (max-width: 600px) {
+  .admin-table th, .admin-table td { white-space: normal; }
+}

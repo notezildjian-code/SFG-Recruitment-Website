@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>SFG Admin | Job Applications</title>
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="css/admin.css" />
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <img src="assets/logo-blue.jpg" alt="SFG - Star Fashion Group" class="header-logo-img" />
+      <div class="header-title">
+        <span class="th">ระบบจัดการผู้ดูแล</span>
+        <span class="en">Admin Dashboard</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-main admin-main">
+    <div id="signin-section" class="step-card admin-signin-card">
+      <h2 class="step-title">เข้าสู่ระบบ Admin / Admin Sign-In</h2>
+      <p class="step-hint">กรุณาลงชื่อเข้าใช้ด้วยบัญชี Google ที่ได้รับอนุญาตเท่านั้น / Please sign in with an authorized Google account.</p>
+      <div id="g_id_signin"></div>
+      <div id="signin-error" class="error-banner" style="display:none"></div>
+    </div>
+
+    <div id="admin-app" class="admin-app" style="display:none">
+      <div class="admin-topbar">
+        <span id="admin-user-email" class="admin-subtext"></span>
+        <button type="button" id="btn-signout" class="btn btn-secondary admin-btn-small">ออกจากระบบ / Sign out</button>
+      </div>
+
+      <div class="admin-tabs">
+        <button type="button" class="admin-tab active" data-admin-tab="positions">ตำแหน่งงาน / Positions</button>
+        <button type="button" class="admin-tab" data-admin-tab="applications">ผู้สมัคร / Applications</button>
+      </div>
+
+      <section id="tab-positions" class="admin-tab-panel step-card">
+        <h3>เพิ่มตำแหน่งงานใหม่ / Add Position</h3>
+        <form id="add-position-form" class="admin-inline-form">
+          <input type="text" id="new-position-name" placeholder="ชื่อตำแหน่ง / Position name" required />
+          <label class="checkbox-inline"><input type="checkbox" id="new-position-salespc" /> PC (มีพื้นที่/ห้าง)</label>
+          <button type="submit" class="btn btn-primary">+ เพิ่ม / Add</button>
+        </form>
+        <div id="positions-status" class="admin-status"></div>
+        <div class="admin-table-wrap">
+          <table class="admin-table" id="positions-table">
+            <thead><tr><th>ชื่อตำแหน่ง</th><th>PC?</th><th>สถานะ</th><th></th></tr></thead>
+            <tbody id="positions-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-applications" class="admin-tab-panel step-card" style="display:none">
+        <div class="admin-toolbar">
+          <button type="button" id="btn-refresh-applications" class="btn btn-secondary">รีเฟรช / Refresh</button>
+          <button type="button" id="btn-export-excel" class="btn btn-primary">Export to Excel</button>
+          <input type="text" id="applications-search" placeholder="ค้นหาชื่อ/ตำแหน่ง/มือถือ..." class="admin-search" />
+        </div>
+        <div id="applications-status" class="admin-status"></div>
+        <div class="admin-table-wrap">
+          <table class="admin-table" id="applications-table">
+            <thead><tr><th>วันที่ส่ง</th><th>ชื่อ</th><th>ตำแหน่ง</th><th>มือถือ</th><th>สถานะ</th></tr></thead>
+            <tbody id="applications-tbody"></tbody>
+          </table>
+        </div>
+        <div id="application-detail" class="admin-detail" style="display:none"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>Star Fashion (2551) Co., Ltd. &middot; Admin Only</p>
+  </footer>
+
+  <script src="js/util.js?v=10"></script>
+  <script src="js/config.js?v=10"></script>
+  <script src="js/admin-config.js?v=10"></script>
+  <script src="js/admin.js?v=10"></script>
+</body>
+</html>

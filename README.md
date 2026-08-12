@@ -61,13 +61,65 @@ is the most common cause of "the form silently stopped working."
 ## Where things live
 
 - **Google Sheet** ("SFG Job Applications"): open it from the Apps Script owner's Google Drive.
-  - `Applications` tab — one row per submission. Add/edit the `Status` column freely for HR
-    triage (e.g. "Reviewed", "Contacted") — the script never overwrites it.
-  - `Education`, `WorkHistory`, `Siblings`, `EmergencyContacts` — one row per entry, linked back
-    to the applicant via the `ApplicationID` column (matches the `ApplicationID` in `Applications`).
-  - `Attachments` — one row per uploaded document, with a link to the file in Drive.
+  - `Applications` tab — **one row per applicant**, everything in one place. Repeatable sections
+    (education, work history, emergency contacts, additional languages, additional computer apps)
+    are flattened into numbered columns (`Education1_Level`, `Education2_Level`, ...) up to a cap
+    (education ×3, work history ×5, emergency contacts ×3, additional languages ×3, additional
+    apps ×3); anything beyond the cap is joined into a trailing `...Extra` text column per section
+    so nothing is ever silently dropped. Attachment links (`PhotoURL`, `CVURL`,
+    `AdditionalAttachment1_URL`..`3_URL` + `AdditionalAttachmentsExtra`) live on the row too. Add/
+    edit the `Status` column freely for HR triage (e.g. "Reviewed", "Contacted") — the script
+    never overwrites it.
+  - `Positions` tab — open positions shown in the form's dropdown, managed via `admin.html` (or
+    edit the sheet directly: `PositionID` / `PositionName` / `IsOpen` / `IsSalesPC`).
+  - `Education`, `WorkHistory`, `EmergencyContacts`, `AdditionalLanguages`, `AdditionalComputerApps`,
+    `Attachments` — **legacy tabs**, no longer written to (superseded by the flattened columns on
+    `Applications` above). Safe to delete manually if you want; the script never touches them again.
 - **Drive folder** ("SFG Applications - Attachments"): each applicant gets a subfolder named by
-  their `ApplicationID`, containing their uploaded photo/ID copy/certificates.
+  their `ApplicationID`, containing their uploaded photo/CV/other attachments.
+
+## Admin page (`admin.html`)
+
+A separate, unlinked page for managing open positions, browsing submitted applications, and
+exporting the whole spreadsheet to Excel — restricted to one Google account via Google Sign-In,
+verified server-side in `Code.gs`. It is **not** linked from the public form; access it directly
+at `https://<your-org>.github.io/<repo>/admin.html`.
+
+### One-time setup (in addition to the steps above)
+
+1. **Create an OAuth Client ID** at [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials):
+   - Configure the OAuth consent screen if you haven't already (External, Testing mode is fine
+     for a single admin — no verification/publishing needed).
+   - Create Credentials → **OAuth client ID** → Application type **Web application**.
+   - Authorized JavaScript origins: your production GitHub Pages origin (e.g.
+     `https://notezildjian-code.github.io`) and, for local testing, `http://localhost:8080`. No
+     redirect URI is needed.
+   - Copy the resulting Client ID (looks like `xxxx.apps.googleusercontent.com` — not secret, safe
+     to commit).
+2. Paste that Client ID into **both**:
+   - `js/admin-config.js` → `GOOGLE_CLIENT_ID`
+   - `apps-script/Code.gs` → the `GOOGLE_CLIENT_ID` constant near the top
+   (they must match exactly, or every admin action will be rejected with `invalid_audience`.)
+3. In `apps-script/Code.gs`, confirm `ADMIN_EMAIL` is set to the Google account that should have
+   access (currently `annop.p@sfg-th.com`). Only that exact email can sign in.
+4. Redeploy the Apps Script (see "Redeploying after edits" below) — this manifest change adds an
+   `oauthScopes` array, so Google will show a **new consent/authorization screen** (including an
+   "unverified app" warning, expected for an internal script) that you have to click through
+   yourself.
+5. Open `admin.html`, sign in with the allowed Google account, and confirm the dashboard loads.
+
+### Security notes
+
+- The underlying Sheet is **never shared** with the admin's Google account — every admin action
+  (list/edit positions, list applications, export) runs under the Apps Script's own identity
+  (`executeAs: USER_DEPLOYING`), not the signed-in browser session. This matters because the
+  Sheet holds PDPA-sensitive data (ID card numbers, health info) — don't "fix" any future access
+  issue by sharing the Sheet directly; that would widen exposure unnecessarily.
+- `admin.html` being unlinked is not the security boundary — the real gate is server-side, in
+  `Code.gs`'s `verifyAdminToken` (checks the Google ID token's audience + exact email match).
+  Anyone can technically load the page; only the allowed email can actually get data out of it.
+- The admin page never stores the sign-in token in `localStorage`/`sessionStorage` — every page
+  load requires a fresh sign-in.
 
 ## Anti-spam
 

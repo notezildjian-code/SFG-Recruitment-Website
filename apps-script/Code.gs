@@ -1,10 +1,18 @@
-// Apps Script Web App backend for the SFG job application form.
+// Apps Script Web App backend for the SFG job application form + admin page.
 // Deploy: Deploy > New deployment > Web app, Execute as: Me, Who has access: Anyone.
 // First run auto-creates the Spreadsheet + Drive folder and stores their IDs in
 // Script Properties -- no manual ID configuration needed. See README.md.
 
 var MIN_SUBMIT_MS = 3000;
 
+// Set after creating an OAuth Client ID in Google Cloud Console (see README.md) --
+// used to verify the admin page's Google Sign-In ID token is meant for this app.
+var GOOGLE_CLIENT_ID = 'REPLACE_WITH_YOUR_OAUTH_CLIENT_ID.apps.googleusercontent.com';
+var ADMIN_EMAIL = 'annop.p@sfg-th.com';
+
+// Every applicant is ONE row on the Applications sheet. Repeatable sections (education,
+// work history, etc.) are flattened into numbered column groups up to a cap, with any
+// entries beyond the cap joined into a trailing "Extra" text column so nothing is lost.
 var APPLICATIONS_HEADERS = [
   'ApplicationID', 'SubmittedAt', 'PositionApplying', 'PositionArea', 'ExpectedSalary', 'NamePrefix', 'NameThai', 'NameEnglish', 'Nickname',
   'Gender', 'HeightCm', 'WeightKg', 'DobBE', 'Age', 'IdCardNo',
@@ -25,15 +33,40 @@ var APPLICATIONS_HEADERS = [
   'WillingToRelocate',
   'PortfolioLink',
   'ConsentGiven', 'SignatureFullName', 'SignatureDate', 'Status',
+
+  'Education1_Level', 'Education1_Institution', 'Education1_FacultyMajor', 'Education1_GPA',
+  'Education2_Level', 'Education2_Institution', 'Education2_FacultyMajor', 'Education2_GPA',
+  'Education3_Level', 'Education3_Institution', 'Education3_FacultyMajor', 'Education3_GPA',
+  'EducationExtra',
+
+  'WorkHistory1_From', 'WorkHistory1_To', 'WorkHistory1_IsCurrent', 'WorkHistory1_Duration', 'WorkHistory1_Employer', 'WorkHistory1_Position', 'WorkHistory1_LastSalary', 'WorkHistory1_Responsibilities', 'WorkHistory1_ReasonForLeaving',
+  'WorkHistory2_From', 'WorkHistory2_To', 'WorkHistory2_IsCurrent', 'WorkHistory2_Duration', 'WorkHistory2_Employer', 'WorkHistory2_Position', 'WorkHistory2_LastSalary', 'WorkHistory2_Responsibilities', 'WorkHistory2_ReasonForLeaving',
+  'WorkHistory3_From', 'WorkHistory3_To', 'WorkHistory3_IsCurrent', 'WorkHistory3_Duration', 'WorkHistory3_Employer', 'WorkHistory3_Position', 'WorkHistory3_LastSalary', 'WorkHistory3_Responsibilities', 'WorkHistory3_ReasonForLeaving',
+  'WorkHistory4_From', 'WorkHistory4_To', 'WorkHistory4_IsCurrent', 'WorkHistory4_Duration', 'WorkHistory4_Employer', 'WorkHistory4_Position', 'WorkHistory4_LastSalary', 'WorkHistory4_Responsibilities', 'WorkHistory4_ReasonForLeaving',
+  'WorkHistory5_From', 'WorkHistory5_To', 'WorkHistory5_IsCurrent', 'WorkHistory5_Duration', 'WorkHistory5_Employer', 'WorkHistory5_Position', 'WorkHistory5_LastSalary', 'WorkHistory5_Responsibilities', 'WorkHistory5_ReasonForLeaving',
+  'WorkHistoryExtra',
+
+  'EmergencyContact1_Name', 'EmergencyContact1_Mobile', 'EmergencyContact1_Relationship',
+  'EmergencyContact2_Name', 'EmergencyContact2_Mobile', 'EmergencyContact2_Relationship',
+  'EmergencyContact3_Name', 'EmergencyContact3_Mobile', 'EmergencyContact3_Relationship',
+  'EmergencyContactExtra',
+
+  'AdditionalLanguage1_Name', 'AdditionalLanguage1_Overall',
+  'AdditionalLanguage2_Name', 'AdditionalLanguage2_Overall',
+  'AdditionalLanguage3_Name', 'AdditionalLanguage3_Overall',
+  'AdditionalLanguageExtra',
+
+  'AdditionalApp1_Name', 'AdditionalApp1_Rating',
+  'AdditionalApp2_Name', 'AdditionalApp2_Rating',
+  'AdditionalApp3_Name', 'AdditionalApp3_Rating',
+  'AdditionalAppExtra',
+
+  'PhotoURL', 'CVURL',
+  'AdditionalAttachment1_URL', 'AdditionalAttachment2_URL', 'AdditionalAttachment3_URL',
+  'AdditionalAttachmentsExtra',
 ];
 
-var EDUCATION_HEADERS = ['ApplicationID', 'Level', 'Institution', 'FacultyMajor', 'GPA'];
-var WORKHISTORY_HEADERS = ['ApplicationID', 'From', 'To', 'IsCurrent', 'Duration', 'Employer', 'Position', 'LastSalary', 'Responsibilities', 'ReasonForLeaving'];
-var EMERGENCY_HEADERS = ['ApplicationID', 'Name', 'Mobile', 'Relationship'];
-var ADDITIONAL_LANGUAGES_HEADERS = ['ApplicationID', 'Name', 'Overall'];
-var ADDITIONAL_APPS_HEADERS = ['ApplicationID', 'AppName', 'Rating'];
-var ATTACHMENTS_HEADERS = ['ApplicationID', 'DocumentType', 'FileName', 'DriveFileURL', 'MimeType', 'FileSizeBytes'];
-var POSITIONS_HEADERS = ['PositionName', 'IsOpen', 'IsSalesPC'];
+var POSITIONS_HEADERS = ['PositionID', 'PositionName', 'IsOpen', 'IsSalesPC'];
 
 function doGet(e) {
   var action = e.parameter.action;
@@ -41,14 +74,9 @@ function doGet(e) {
     var ss = getSpreadsheet();
     var sheet = ensureSheetWithHeaders(ss, 'Positions', POSITIONS_HEADERS);
     seedPositionsIfEmpty(sheet);
-    var rows = sheet.getDataRange().getValues();
-    var positions = [];
-    for (var i = 1; i < rows.length; i++) {
-      var name = rows[i][0];
-      var isOpen = rows[i][1];
-      var isSalesPC = rows[i][2];
-      if (name && isOpen === true) positions.push({ name: name, isSalesPC: isSalesPC === true });
-    }
+    var positions = readRowsAsObjects(sheet)
+      .filter(function (r) { return r.PositionName && r.IsOpen === true; })
+      .map(function (r) { return { name: r.PositionName, isSalesPC: r.IsSalesPC === true }; });
     return jsonResponse({ positions: positions });
   }
   return jsonResponse({ ok: false, error: 'unknown_action' });
@@ -56,16 +84,25 @@ function doGet(e) {
 
 function seedPositionsIfEmpty(sheet) {
   if (sheet.getLastRow() > 1) return;
-  sheet.appendRow(['พนักงานขาย (PC)', true, true]);
-  sheet.appendRow(['เจ้าหน้าที่บัญชี', true, false]);
+  appendRowByHeaders(sheet, { PositionID: Utilities.getUuid(), PositionName: 'พนักงานขาย (PC)', IsOpen: true, IsSalesPC: true });
+  appendRowByHeaders(sheet, { PositionID: Utilities.getUuid(), PositionName: 'เจ้าหน้าที่บัญชี', IsOpen: true, IsSalesPC: false });
 }
 
 function doPost(e) {
+  var payload;
+  try {
+    payload = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return jsonResponse({ ok: false, error: 'invalid_json' });
+  }
+  if (payload.action) return handleAdminAction(payload);
+  return handleApplicationSubmission(payload);
+}
+
+function handleApplicationSubmission(payload) {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    var payload = JSON.parse(e.postData.contents);
-
     if (payload.honeypot) return jsonResponse({ ok: true });
     if (!payload.formLoadedAt || Date.now() - payload.formLoadedAt < MIN_SUBMIT_MS) return jsonResponse({ ok: true });
 
@@ -73,26 +110,10 @@ function doPost(e) {
     if (validationError) return jsonResponse({ ok: false, error: validationError });
 
     var ss = getSpreadsheet();
-    writeApplicationRow(ss, payload);
-    writeChildRows(ss, 'Education', EDUCATION_HEADERS, payload.applicationId, payload.education, function (row) {
-      return { ApplicationID: payload.applicationId, Level: row.level, Institution: row.institution, FacultyMajor: row.facultyMajor, GPA: row.gpa };
-    });
-    writeChildRows(ss, 'WorkHistory', WORKHISTORY_HEADERS, payload.applicationId, payload.workHistory, function (row) {
-      return { ApplicationID: payload.applicationId, From: row.from, To: row.to, IsCurrent: row.isCurrent ? 'Yes' : 'No', Duration: row.duration, Employer: row.employer, Position: row.position, LastSalary: row.lastSalary, Responsibilities: row.responsibilities, ReasonForLeaving: row.reasonForLeaving };
-    });
-    writeChildRows(ss, 'EmergencyContacts', EMERGENCY_HEADERS, payload.applicationId, payload.other.emergencyContacts, function (row) {
-      return { ApplicationID: payload.applicationId, Name: row.name, Mobile: row.mobile, Relationship: row.relationship };
-    });
-    writeChildRows(ss, 'AdditionalLanguages', ADDITIONAL_LANGUAGES_HEADERS, payload.applicationId, payload.skills.languages.additional, function (row) {
-      return { ApplicationID: payload.applicationId, Name: row.name, Overall: row.overall };
-    });
-    writeChildRows(ss, 'AdditionalComputerApps', ADDITIONAL_APPS_HEADERS, payload.applicationId, payload.skills.computer.additionalApps, function (row) {
-      return { ApplicationID: payload.applicationId, AppName: row.name, Rating: row.rating };
-    });
-
-    if (payload.attachments && payload.attachments.length) {
-      saveAttachments(ss, payload.applicationId, payload.attachments);
-    }
+    var attachmentColumns = saveAttachmentsAndGetColumns(ss, payload.applicationId, payload.attachments || []);
+    var rowObj = buildApplicationRowObject(payload, attachmentColumns);
+    var sheet = ensureSheetWithHeaders(ss, 'Applications', APPLICATIONS_HEADERS);
+    appendRowByHeaders(sheet, rowObj);
 
     return jsonResponse({ ok: true, applicationId: payload.applicationId });
   } catch (err) {
@@ -112,8 +133,7 @@ function validatePayload(payload) {
   return null;
 }
 
-function writeApplicationRow(ss, p) {
-  var sheet = ensureSheetWithHeaders(ss, 'Applications', APPLICATIONS_HEADERS);
+function buildApplicationRowObject(p, attachmentColumns) {
   var personal = p.personal;
   var skills = p.skills;
   var health = p.health;
@@ -184,34 +204,282 @@ function writeApplicationRow(ss, p) {
     Status: '',
   };
 
-  appendRowByHeaders(sheet, rowObj);
+  Object.assign(rowObj, flattenRepeatableSection(p.education, 3, 'Education',
+    function (row) { return { Level: row.level, Institution: row.institution, FacultyMajor: row.facultyMajor, GPA: row.gpa }; },
+    function (row) { return 'Level: ' + row.level + ' | Institution: ' + row.institution + ' | FacultyMajor: ' + row.facultyMajor + ' | GPA: ' + row.gpa; }
+  ));
+
+  Object.assign(rowObj, flattenRepeatableSection(p.workHistory, 5, 'WorkHistory',
+    function (row) {
+      return {
+        From: row.from, To: row.to, IsCurrent: row.isCurrent ? 'Yes' : 'No', Duration: row.duration,
+        Employer: row.employer, Position: row.position, LastSalary: row.lastSalary,
+        Responsibilities: row.responsibilities, ReasonForLeaving: row.reasonForLeaving,
+      };
+    },
+    function (row) {
+      return 'From: ' + row.from + ' | To: ' + row.to + ' | Employer: ' + row.employer + ' | Position: ' + row.position +
+        ' | LastSalary: ' + row.lastSalary + ' | Responsibilities: ' + row.responsibilities + ' | ReasonForLeaving: ' + row.reasonForLeaving;
+    }
+  ));
+
+  Object.assign(rowObj, flattenRepeatableSection(other.emergencyContacts, 3, 'EmergencyContact',
+    function (row) { return { Name: row.name, Mobile: row.mobile, Relationship: row.relationship }; },
+    function (row) { return 'Name: ' + row.name + ' | Mobile: ' + row.mobile + ' | Relationship: ' + row.relationship; }
+  ));
+
+  Object.assign(rowObj, flattenRepeatableSection(skills.languages.additional, 3, 'AdditionalLanguage',
+    function (row) { return { Name: row.name, Overall: row.overall }; },
+    function (row) { return 'Name: ' + row.name + ' | Overall: ' + row.overall; }
+  ));
+
+  Object.assign(rowObj, flattenRepeatableSection(skills.computer.additionalApps, 3, 'AdditionalApp',
+    function (row) { return { Name: row.name, Rating: row.rating }; },
+    function (row) { return 'Name: ' + row.name + ' | Rating: ' + row.rating; }
+  ));
+
+  Object.assign(rowObj, attachmentColumns);
+
+  return rowObj;
 }
 
 function appRating(apps, key) { return apps[key] ? apps[key].rating : ''; }
 
-function writeChildRows(ss, sheetName, headers, applicationId, rows, mapFn) {
-  if (!rows || !rows.length) return;
-  var sheet = ensureSheetWithHeaders(ss, sheetName, headers);
-  rows.forEach(function (row) {
-    var isEmpty = Object.keys(row).every(function (k) { return !row[k]; });
-    if (isEmpty) return;
-    appendRowByHeaders(sheet, mapFn(row));
+// Flattens a repeatable array (education rows, work-history rows, ...) into a fixed
+// number of numbered column groups (columnPrefix + "1_" + field, "2_" + field, ...), and
+// joins any entries beyond capCount into a single columnPrefix + "Extra" text column so
+// an applicant with more entries than the cap never silently loses data.
+function flattenRepeatableSection(rows, capCount, columnPrefix, mapRowToFields, formatOverflowEntry) {
+  var nonEmpty = (rows || []).filter(function (row) {
+    return Object.keys(row).some(function (k) { return !!row[k]; });
   });
+  var result = {};
+  for (var i = 0; i < capCount; i++) {
+    var row = nonEmpty[i];
+    if (!row) continue;
+    var fields = mapRowToFields(row);
+    Object.keys(fields).forEach(function (suffix) {
+      result[columnPrefix + (i + 1) + '_' + suffix] = fields[suffix];
+    });
+  }
+  result[columnPrefix + 'Extra'] = nonEmpty.slice(capCount).map(formatOverflowEntry).join('\n---\n');
+  return result;
 }
 
-function saveAttachments(ss, applicationId, attachments) {
-  var sheet = ensureSheetWithHeaders(ss, 'Attachments', ATTACHMENTS_HEADERS);
-  var parentFolder = getOrCreateDriveFolder();
-  var appFolder = parentFolder.createFolder(applicationId);
+// Saves each attachment into a per-applicant Drive subfolder (unchanged from before) but
+// returns flat column values for the applicant's single row instead of writing a separate
+// Attachments-sheet row per file.
+function saveAttachmentsAndGetColumns(ss, applicationId, attachments) {
+  var columns = {
+    PhotoURL: '', CVURL: '',
+    AdditionalAttachment1_URL: '', AdditionalAttachment2_URL: '', AdditionalAttachment3_URL: '',
+    AdditionalAttachmentsExtra: '',
+  };
+  if (!attachments || !attachments.length) return columns;
 
+  var appFolder = getOrCreateDriveFolder().createFolder(applicationId);
+  var additionalEntries = [];
   attachments.forEach(function (att) {
     var blob = Utilities.newBlob(Utilities.base64Decode(att.base64Data), att.mimeType, att.fileName);
     var ext = (att.fileName.match(/\.[^.]+$/) || [''])[0];
     var file = appFolder.createFile(blob).setName(applicationId + '_' + att.documentType + ext);
-    appendRowByHeaders(sheet, {
-      ApplicationID: applicationId, DocumentType: att.documentType, FileName: att.fileName,
-      DriveFileURL: file.getUrl(), MimeType: att.mimeType, FileSizeBytes: att.sizeBytes,
-    });
+    var url = file.getUrl();
+    if (att.documentType === 'photo') {
+      columns.PhotoURL = url;
+    } else if (att.documentType === 'cv') {
+      columns.CVURL = url;
+    } else {
+      additionalEntries.push(att.fileName + ': ' + url);
+    }
+  });
+  for (var i = 0; i < 3; i++) {
+    columns['AdditionalAttachment' + (i + 1) + '_URL'] = additionalEntries[i] || '';
+  }
+  columns.AdditionalAttachmentsExtra = additionalEntries.slice(3).join('\n');
+  return columns;
+}
+
+// ---- Admin actions (all require a verified Google Sign-In ID token) ----
+
+function handleAdminAction(payload) {
+  try {
+    verifyAdminToken(payload.idToken);
+  } catch (err) {
+    return jsonResponse({ ok: false, error: String(err) });
+  }
+  switch (payload.action) {
+    case 'adminListPositions':
+      return jsonResponse({ ok: true, positions: listAllPositionsForAdmin() });
+    case 'adminAddPosition':
+      return jsonResponse(addPosition(payload));
+    case 'adminUpdatePosition':
+      return jsonResponse(updatePosition(payload));
+    case 'adminListApplications':
+      return jsonResponse({ ok: true, applications: listAllApplications() });
+    case 'adminExportXlsx':
+      return jsonResponse(exportSpreadsheetAsXlsx());
+    default:
+      return jsonResponse({ ok: false, error: 'unknown_admin_action' });
+  }
+}
+
+// Verifies a Google Identity Services ID token server-side. This is the ONLY access
+// gate for admin actions, since the Web App deployment itself is anonymous/public --
+// every admin branch must call this before doing anything. Throws (a plain string) on
+// any failure; callers catch and turn it into a {ok:false, error:...} response.
+function verifyAdminToken(idToken) {
+  if (!idToken) throw 'missing_idToken';
+  var resp = UrlFetchApp.fetch(
+    'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken),
+    { muteHttpExceptions: true }
+  );
+  if (resp.getResponseCode() !== 200) throw 'invalid_idToken';
+  var claims = JSON.parse(resp.getContentText());
+  // aud must match OUR client ID -- otherwise a token minted for some other site that
+  // happens to belong to the same Google account could be replayed against this backend.
+  if (claims.aud !== GOOGLE_CLIENT_ID) throw 'invalid_audience';
+  if (claims.email_verified !== 'true') throw 'email_not_verified';
+  if (String(claims.email).toLowerCase() !== ADMIN_EMAIL.toLowerCase()) throw 'not_authorized';
+  return claims;
+}
+
+function listAllPositionsForAdmin() {
+  var ss = getSpreadsheet();
+  var sheet = ensureSheetWithHeaders(ss, 'Positions', POSITIONS_HEADERS);
+  seedPositionsIfEmpty(sheet);
+  backfillPositionIds(sheet);
+  return readRowsAsObjects(sheet).map(function (r) {
+    return { id: r.PositionID, name: r.PositionName, isOpen: r.IsOpen === true, isSalesPC: r.IsSalesPC === true };
+  });
+}
+
+function addPosition(payload) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    if (!payload.name) return { ok: false, error: 'missing_name' };
+    var ss = getSpreadsheet();
+    var sheet = ensureSheetWithHeaders(ss, 'Positions', POSITIONS_HEADERS);
+    var id = Utilities.getUuid();
+    var isOpen = payload.isOpen !== false;
+    var isSalesPC = payload.isSalesPC === true;
+    appendRowByHeaders(sheet, { PositionID: id, PositionName: payload.name, IsOpen: isOpen, IsSalesPC: isSalesPC });
+    return { ok: true, position: { id: id, name: payload.name, isOpen: isOpen, isSalesPC: isSalesPC } };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function updatePosition(payload) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    if (!payload.id) return { ok: false, error: 'missing_id' };
+    var ss = getSpreadsheet();
+    var sheet = ensureSheetWithHeaders(ss, 'Positions', POSITIONS_HEADERS);
+    backfillPositionIds(sheet);
+    var rowNum = findPositionRowById(sheet, payload.id);
+    if (rowNum === -1) return { ok: false, error: 'position_not_found' };
+    var updates = {};
+    if (payload.name !== undefined) updates.PositionName = payload.name;
+    if (payload.isOpen !== undefined) updates.IsOpen = payload.isOpen === true;
+    if (payload.isSalesPC !== undefined) updates.IsSalesPC = payload.isSalesPC === true;
+    updateRowByHeaders(sheet, rowNum, updates);
+    return { ok: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Older Positions rows (created before PositionID existed) get one generated the first
+// time the admin page reads them, so admin edits/closes always have a stable key to
+// target -- no manual migration step needed.
+function backfillPositionIds(sheet) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+  var idCol = headerIndex(sheet, 'PositionID') + 1;
+  var range = sheet.getRange(2, idCol, lastRow - 1, 1);
+  var values = range.getValues();
+  var changed = false;
+  for (var i = 0; i < values.length; i++) {
+    if (!values[i][0]) {
+      values[i][0] = Utilities.getUuid();
+      changed = true;
+    }
+  }
+  if (changed) range.setValues(values);
+}
+
+function findPositionRowById(sheet, id) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return -1;
+  var idCol = headerIndex(sheet, 'PositionID') + 1;
+  var ids = sheet.getRange(2, idCol, lastRow - 1, 1).getValues();
+  for (var i = 0; i < ids.length; i++) {
+    if (ids[i][0] === id) return i + 2; // 1-based sheet row number
+  }
+  return -1;
+}
+
+// 0-based column index of a header name on the sheet's live header row, or -1.
+function headerIndex(sheet, name) {
+  var lastCol = sheet.getLastColumn();
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  return headers.indexOf(name);
+}
+
+// Partial update of an EXISTING row by header name -- only overwrites keys present in
+// valuesObj, leaves every other cell in the row untouched.
+function updateRowByHeaders(sheet, rowNum, valuesObj) {
+  var lastCol = sheet.getLastColumn();
+  var range = sheet.getRange(rowNum, 1, 1, lastCol);
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var currentRow = range.getValues()[0];
+  var newRow = headers.map(function (h, i) {
+    return valuesObj[h] !== undefined ? valuesObj[h] : currentRow[i];
+  });
+  range.setValues([newRow]);
+}
+
+function listAllApplications() {
+  var ss = getSpreadsheet();
+  var sheet = ss.getSheetByName('Applications');
+  return sheet ? readRowsAsObjects(sheet) : [];
+}
+
+// Whole spreadsheet (every tab), exported as .xlsx bytes via the script's OWN Google
+// identity (executeAs: USER_DEPLOYING) -- NOT the signed-in admin's browser identity.
+// This is deliberate: it means the Sheet (which holds PDPA-sensitive data -- ID card
+// numbers, health info) never needs to be shared with anyone's personal Google account;
+// verifyAdminToken above is the only access control that matters.
+function exportSpreadsheetAsXlsx() {
+  var ss = getSpreadsheet();
+  var url = 'https://docs.google.com/spreadsheets/d/' + ss.getId() + '/export?format=xlsx';
+  var resp = UrlFetchApp.fetch(url, {
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+    muteHttpExceptions: true,
+  });
+  if (resp.getResponseCode() !== 200) return { ok: false, error: 'export_failed_' + resp.getResponseCode() };
+  return {
+    ok: true,
+    filename: 'SFG-Job-Applications-' + Utilities.formatDate(new Date(), 'Asia/Bangkok', 'yyyyMMdd-HHmmss') + '.xlsx',
+    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    base64: Utilities.base64Encode(resp.getContent()),
+  };
+}
+
+// Reads every data row (row 2 onward) of a sheet into an array of plain objects keyed by
+// that sheet's live header row -- used by both the positions and applications admin reads.
+function readRowsAsObjects(sheet) {
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastRow < 2) return [];
+  var data = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  var headers = data[0];
+  return data.slice(1).map(function (row) {
+    var obj = {};
+    headers.forEach(function (h, i) { obj[h] = row[i]; });
+    return obj;
   });
 }
 
