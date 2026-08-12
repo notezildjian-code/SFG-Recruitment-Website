@@ -18,6 +18,7 @@ const COMPUTER_APPS = [
   { value: 'excel', label: { th: 'Excel', en: 'Excel' } },
   { value: 'powerpoint', label: { th: 'PowerPoint', en: 'PowerPoint' } },
   { value: 'canva', label: { th: 'Canva', en: 'Canva' } },
+  { value: 'capcut', label: { th: 'CapCut', en: 'CapCut' } },
   { value: 'chatgpt', label: { th: 'ChatGPT', en: 'ChatGPT' } },
   { value: 'claude', label: { th: 'Claude', en: 'Claude' } },
   { value: 'gemini', label: { th: 'Gemini', en: 'Gemini' } },
@@ -69,12 +70,12 @@ const PREGNANCY_MONTH_OPTIONS = [
 
 const SOURCE_OF_POSTING_OPTIONS = [
   { value: 'facebook', label: { th: 'Facebook', en: 'Facebook' } },
-  { value: 'company_website', label: { th: 'เว็บไซต์บริษัท', en: 'Company Website' } },
   { value: 'jobbkk', label: { th: 'Jobbkk', en: 'Jobbkk' } },
-  { value: 'jobthai', label: { th: 'JobThai', en: 'JobThai' } },
+  { value: 'jobthai', label: { th: 'Jobthai', en: 'Jobthai' } },
   { value: 'jobtopgun', label: { th: 'Jobtopgun', en: 'Jobtopgun' } },
   { value: 'jobsdb', label: { th: 'Jobsdb', en: 'Jobsdb' } },
-  { value: 'friend', label: { th: 'เพื่อนแนะนำ', en: 'Friend Referral' } },
+  { value: 'company_website', label: { th: 'เว็บไซต์บริษัท', en: 'Company Website' } },
+  { value: 'friend', label: { th: 'มีบุคคลแนะนำ', en: 'Referred by a Contact' } },
   { value: 'employee', label: { th: 'พนักงานบริษัทแนะนำ', en: 'Employee Referral' } },
   { value: 'other', label: { th: 'อื่น ๆ', en: 'Other' } },
 ];
@@ -167,8 +168,8 @@ const STEPS = [
       { id: 'chronicSpecify', path: 'health.chronicDisease.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', required: true, condition: (s) => s.health.chronicDisease.yn === 'yes', colSpan: 'full' },
       { id: 'disabilityYn', path: 'health.disability.yn', label: { th: 'ท่านมีความบกพร่อง หรือมีความพิการทางร่างกายหรือไม่', en: 'Do you have physical disabilities or handicap?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },
       { id: 'disabilitySpecify', path: 'health.disability.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', required: true, condition: (s) => s.health.disability.yn === 'yes', colSpan: 'full' },
-      { id: 'pregnantYn', path: 'health.pregnant.yn', label: { th: 'ท่านกำลังตั้งครรภ์หรือไม่', en: 'Are you pregnant?' }, type: 'radio', required: true, options: PREGNANT_YES_NO_OPTIONS, condition: (s) => s.personal.gender === 'F', colSpan: 'full' },
-      { id: 'pregnantSpecify', path: 'health.pregnant.specify', label: { th: 'โปรดระบุอายุครรภ์ของท่าน', en: 'Please specify your pregnancy duration' }, type: 'select', required: true, options: PREGNANCY_MONTH_OPTIONS, condition: (s) => s.personal.gender === 'F' && s.health.pregnant.yn === 'yes', colSpan: 'full' },
+      { id: 'pregnantYn', path: 'health.pregnant.yn', label: { th: 'ท่านกำลังตั้งครรภ์หรือไม่', en: 'Are you pregnant?' }, type: 'radio', required: true, options: PREGNANT_YES_NO_OPTIONS, condition: (s) => s.personal.gender === 'F' || s.personal.gender === 'LGBTQ+', colSpan: 'full' },
+      { id: 'pregnantSpecify', path: 'health.pregnant.specify', label: { th: 'โปรดระบุอายุครรภ์ของท่าน', en: 'Please specify your pregnancy duration' }, type: 'select', required: true, options: PREGNANCY_MONTH_OPTIONS, condition: (s) => (s.personal.gender === 'F' || s.personal.gender === 'LGBTQ+') && s.health.pregnant.yn === 'yes', colSpan: 'full' },
     ],
   },
   {
@@ -178,7 +179,7 @@ const STEPS = [
     fields: [
       { id: 'sourceOfPosting', path: 'other.sourceOfPosting', label: { th: 'ท่านทราบว่ามีตำแหน่งงานว่างจากที่ใด', en: 'Where did you find the information about this position?' }, type: 'select', options: SOURCE_OF_POSTING_OPTIONS, colSpan: 'full' },
       { id: 'sourceOfPostingSpecify', path: 'other.sourceOfPostingSpecify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', required: true, condition: (s) => s.other.sourceOfPosting === 'other', colSpan: 'full' },
-      { id: 'referredBy', path: 'other.referredBy', label: { th: 'โปรดระบุชื่อบุคคลที่แนะนำท่านมาสมัครงาน (หากมี)', en: 'Who did you suggest you to apply for this position? (If any)' }, type: 'text', colSpan: 'full' },
+      { id: 'referredBy', path: 'other.referredBy', label: { th: 'โปรดระบุชื่อพนักงานของบริษัทที่แนะนำท่านมาสมัครงาน', en: 'Please specify the name of the employee who referred you' }, type: 'text', required: true, condition: (s) => s.other.sourceOfPosting === 'employee', colSpan: 'full' },
       { id: 'criminalYn', path: 'other.criminalRecord.yn', label: { th: 'ท่านเคยต้องโทษ หรือมีส่วนพัวพันทั้งในคดีแพ่ง หรือคดีอาญาหรือไม่', en: 'Have you ever been involved in or convicted of civil/criminal offense?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },
       { id: 'criminalSpecify', path: 'other.criminalRecord.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', condition: (s) => s.other.criminalRecord.yn === 'yes', colSpan: 'full' },
       { id: 'previousSfgYn', path: 'other.previousSFG.yn', label: { th: 'ท่านเคยมาสมัครงาน หรือเคยเป็นพนักงานของบริษัทมาก่อนหรือไม่', en: 'Have you ever applied or worked for SFG Group before?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },

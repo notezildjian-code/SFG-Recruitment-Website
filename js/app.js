@@ -250,7 +250,10 @@ const App = {
         if (key === 'emergencyContacts') this.state.other.emergencyContacts.push({ name: '', mobile: '', relationship: '' });
         if (key === 'additionalLanguages') this.state.skills.languages.additional.push({ name: '', overall: '' });
         if (key === 'additionalApps') this.state.skills.computer.additionalApps.push({ name: '', rating: '' });
-        if (key === 'additionalAttachments') this.state.consent.additionalAttachments.push({ id: uuid() });
+        if (key === 'additionalAttachments') {
+          if (!this.state.consent.additionalAttachments) this.state.consent.additionalAttachments = [];
+          this.state.consent.additionalAttachments.push({ id: uuid() });
+        }
         saveDraft(this.state);
         this.render();
       });

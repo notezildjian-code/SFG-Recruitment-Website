@@ -418,7 +418,7 @@ function attachmentNote(state, documentType) {
 function renderReviewStep(state) {
   const p = state.personal;
 
-  const additionalAttachmentRows = state.consent.additionalAttachments
+  const additionalAttachmentRows = (state.consent.additionalAttachments || [])
     .map(
       (row, i) => `
     <div class="doc-checklist-item" data-repeater="additionalAttachments" data-index="${i}">
