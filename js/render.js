@@ -13,6 +13,7 @@ const TRIGGER_FIELDS = new Set([
   'health.pregnant.yn',
   'other.criminalRecord.yn',
   'other.previousSFG.yn',
+  'other.sourceOfPosting',
 ]);
 
 function fieldWrapperClass(field) {
@@ -53,7 +54,7 @@ function renderInput(field, state) {
     return renderDobInputs(state);
   }
 
-  return `<input type="${field.type}" ${commonAttrs} value="${escapeHtml(value || '')}" ${field.pattern ? `pattern="${field.pattern}"` : ''} ${field.readonly ? 'readonly' : ''} />`;
+  return `<input type="${field.type}" ${commonAttrs} value="${escapeHtml(value || '')}" ${field.pattern ? `pattern="${field.pattern}"` : ''} ${field.readonly ? 'readonly' : ''} ${field.numeric ? 'inputmode="numeric" data-numeric="true"' : ''} />`;
 }
 
 const MONTH_NAMES = {

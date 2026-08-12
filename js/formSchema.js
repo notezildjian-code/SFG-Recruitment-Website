@@ -33,9 +33,6 @@ const MARITAL_OPTIONS = [
   { value: 'single', label: { th: 'โสด', en: 'Single' } },
   { value: 'married_registered', label: { th: 'สมรสจดทะเบียน', en: 'Married' } },
   { value: 'married_not_registered', label: { th: 'สมรสไม่จดทะเบียน', en: 'Married not register' } },
-  { value: 'widowed', label: { th: 'หม้าย', en: 'Widowed' } },
-  { value: 'divorced', label: { th: 'หย่า', en: 'Divorced' } },
-  { value: 'separated', label: { th: 'แยกกันอยู่', en: 'Separated' } },
 ];
 
 // exempt_female removed — the military step itself is now hidden entirely for female applicants.
@@ -68,6 +65,18 @@ const PREGNANCY_MONTH_OPTIONS = [
   { value: '1-3', label: { th: '1-3 เดือน', en: '1-3 months' } },
   { value: '4-6', label: { th: '4-6 เดือน', en: '4-6 months' } },
   { value: '7-9', label: { th: '7-9 เดือน', en: '7-9 months' } },
+];
+
+const SOURCE_OF_POSTING_OPTIONS = [
+  { value: 'facebook', label: { th: 'Facebook', en: 'Facebook' } },
+  { value: 'company_website', label: { th: 'เว็บไซต์บริษัท', en: 'Company Website' } },
+  { value: 'jobbkk', label: { th: 'Jobbkk', en: 'Jobbkk' } },
+  { value: 'jobthai', label: { th: 'JobThai', en: 'JobThai' } },
+  { value: 'jobtopgun', label: { th: 'Jobtopgun', en: 'Jobtopgun' } },
+  { value: 'jobsdb', label: { th: 'Jobsdb', en: 'Jobsdb' } },
+  { value: 'friend', label: { th: 'เพื่อนแนะนำ', en: 'Friend Referral' } },
+  { value: 'employee', label: { th: 'พนักงานบริษัทแนะนำ', en: 'Employee Referral' } },
+  { value: 'other', label: { th: 'อื่น ๆ', en: 'Other' } },
 ];
 
 // Steps counted toward the progress bar's percentage. 'language' and 'consentGate' are
@@ -109,7 +118,7 @@ const STEPS = [
       { id: 'weightKg', path: 'personal.weightKg', label: { th: 'น้ำหนัก (กก.)', en: 'Weight (KG)' }, type: 'number' },
       { id: 'dobBE', path: 'personal.dobBE', label: { th: 'วัน/เดือน/ปีเกิด', en: 'Date of Birth' }, type: 'dob', required: true },
       { id: 'age', path: 'personal.age', label: { th: 'อายุ', en: 'Age' }, type: 'text', readonly: true },
-      { id: 'idCardNo', path: 'personal.idCardNo', label: { th: 'เลขที่บัตรประชาชน', en: 'Identity Card No.' }, type: 'text', required: true, pattern: '^[0-9]{13}$', patternError: { th: 'กรอกเลขบัตรประชาชน 13 หลัก', en: 'Enter a 13-digit ID card number' } },
+      { id: 'idCardNo', path: 'personal.idCardNo', label: { th: 'เลขที่บัตรประชาชน', en: 'Identity Card No.' }, type: 'text', numeric: true, required: true, pattern: '^[0-9]{13}$', patternError: { th: 'กรอกเลขบัตรประชาชน 13 หลัก', en: 'Enter a 13-digit ID card number' } },
       { id: 'mobilePhone', path: 'personal.mobilePhone', label: { th: 'เบอร์โทรศัพท์มือถือ', en: 'Mobile Phone No.' }, type: 'tel', required: true },
       { id: 'email', path: 'personal.email', label: { th: 'อีเมล', en: 'Email' }, type: 'email', required: true },
       { id: 'lineId', path: 'personal.lineId', label: { th: 'ไลน์ ไอดี', en: 'Line ID' }, type: 'text', required: true },
@@ -153,13 +162,13 @@ const STEPS = [
     tabLabel: { th: 'สุขภาพ', en: 'Health' },
     fields: [
       { id: 'illnessYn', path: 'health.illness.yn', label: { th: 'ในช่วง 3-5 ปีนี้ ท่านเคยเจ็บป่วย หรือเป็นโรคร้ายแรงหรือไม่', en: 'In the past 3-5 years, have you had any personal illness, contagious, infectious disease?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },
-      { id: 'illnessSpecify', path: 'health.illness.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', condition: (s) => s.health.illness.yn === 'yes', colSpan: 'full' },
+      { id: 'illnessSpecify', path: 'health.illness.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', required: true, condition: (s) => s.health.illness.yn === 'yes', colSpan: 'full' },
       { id: 'chronicYn', path: 'health.chronicDisease.yn', label: { th: 'ท่านมีโรคประจำตัวหรือไม่', en: 'Do you have any disease?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },
-      { id: 'chronicSpecify', path: 'health.chronicDisease.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', condition: (s) => s.health.chronicDisease.yn === 'yes', colSpan: 'full' },
+      { id: 'chronicSpecify', path: 'health.chronicDisease.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', required: true, condition: (s) => s.health.chronicDisease.yn === 'yes', colSpan: 'full' },
       { id: 'disabilityYn', path: 'health.disability.yn', label: { th: 'ท่านมีความบกพร่อง หรือมีความพิการทางร่างกายหรือไม่', en: 'Do you have physical disabilities or handicap?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },
-      { id: 'disabilitySpecify', path: 'health.disability.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', condition: (s) => s.health.disability.yn === 'yes', colSpan: 'full' },
+      { id: 'disabilitySpecify', path: 'health.disability.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', required: true, condition: (s) => s.health.disability.yn === 'yes', colSpan: 'full' },
       { id: 'pregnantYn', path: 'health.pregnant.yn', label: { th: 'ท่านกำลังตั้งครรภ์หรือไม่', en: 'Are you pregnant?' }, type: 'radio', required: true, options: PREGNANT_YES_NO_OPTIONS, condition: (s) => s.personal.gender === 'F', colSpan: 'full' },
-      { id: 'pregnantSpecify', path: 'health.pregnant.specify', label: { th: 'โปรดระบุอายุครรภ์ของท่าน', en: 'Please specify your pregnancy duration' }, type: 'select', options: PREGNANCY_MONTH_OPTIONS, condition: (s) => s.personal.gender === 'F' && s.health.pregnant.yn === 'yes', colSpan: 'full' },
+      { id: 'pregnantSpecify', path: 'health.pregnant.specify', label: { th: 'โปรดระบุอายุครรภ์ของท่าน', en: 'Please specify your pregnancy duration' }, type: 'select', required: true, options: PREGNANCY_MONTH_OPTIONS, condition: (s) => s.personal.gender === 'F' && s.health.pregnant.yn === 'yes', colSpan: 'full' },
     ],
   },
   {
@@ -167,7 +176,8 @@ const STEPS = [
     title: { th: '7. รายละเอียดอื่น ๆ', en: '7. Other Information' },
     tabLabel: { th: 'อื่น ๆ', en: 'Other' },
     fields: [
-      { id: 'sourceOfPosting', path: 'other.sourceOfPosting', label: { th: 'ท่านทราบว่ามีตำแหน่งงานว่างจากที่ใด', en: 'Where did you find the information about this position?' }, type: 'text', colSpan: 'full' },
+      { id: 'sourceOfPosting', path: 'other.sourceOfPosting', label: { th: 'ท่านทราบว่ามีตำแหน่งงานว่างจากที่ใด', en: 'Where did you find the information about this position?' }, type: 'select', options: SOURCE_OF_POSTING_OPTIONS, colSpan: 'full' },
+      { id: 'sourceOfPostingSpecify', path: 'other.sourceOfPostingSpecify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', required: true, condition: (s) => s.other.sourceOfPosting === 'other', colSpan: 'full' },
       { id: 'referredBy', path: 'other.referredBy', label: { th: 'โปรดระบุชื่อบุคคลที่แนะนำท่านมาสมัครงาน (หากมี)', en: 'Who did you suggest you to apply for this position? (If any)' }, type: 'text', colSpan: 'full' },
       { id: 'criminalYn', path: 'other.criminalRecord.yn', label: { th: 'ท่านเคยต้องโทษ หรือมีส่วนพัวพันทั้งในคดีแพ่ง หรือคดีอาญาหรือไม่', en: 'Have you ever been involved in or convicted of civil/criminal offense?' }, type: 'radio', required: true, options: YES_NO_OPTIONS, colSpan: 'full' },
       { id: 'criminalSpecify', path: 'other.criminalRecord.specify', label: { th: 'โปรดระบุ', en: 'Please specify' }, type: 'text', condition: (s) => s.other.criminalRecord.yn === 'yes', colSpan: 'full' },

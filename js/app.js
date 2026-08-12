@@ -39,7 +39,7 @@ function createInitialState() {
       pregnant: { yn: null, specify: '' },
     },
     other: {
-      sourceOfPosting: '', referredBy: '',
+      sourceOfPosting: '', sourceOfPostingSpecify: '', referredBy: '',
       criminalRecord: { yn: '', specify: '' },
       previousSFG: { yn: '', specify: '' },
       willingToRelocate: '',
@@ -218,6 +218,10 @@ const App = {
       const eventName = el.type === 'checkbox' || el.type === 'radio' || el.tagName === 'SELECT' ? 'change' : 'input';
       el.addEventListener(eventName, () => {
         const path = el.getAttribute('data-path');
+        if (el.dataset.numeric === 'true') {
+          const digitsOnly = el.value.replace(/\D/g, '');
+          if (digitsOnly !== el.value) el.value = digitsOnly;
+        }
         let value;
         if (el.type === 'checkbox') value = el.checked;
         else value = el.value;
