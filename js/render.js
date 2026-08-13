@@ -403,9 +403,12 @@ function renderOtherStep(state) {
     </div>`;
 }
 
-function reviewRow(label, value) {
+// Pass { long: true } for free-text answers (specify fields, responsibilities, etc.) so the
+// value wraps on its own line below the label instead of being squeezed flex-right next to it.
+function reviewRow(label, value, options) {
   if (value == null || value === '') return '';
-  return `<div class="review-row"><span class="review-label">${bilingual(label)}</span><span class="review-value">${escapeHtml(value)}</span></div>`;
+  const cls = options && options.long ? 'review-row review-row-block' : 'review-row';
+  return `<div class="${cls}"><span class="review-label">${bilingual(label)}</span><span class="review-value">${escapeHtml(value)}</span></div>`;
 }
 
 const ATTACHMENT_ACCEPT = '.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.pdf';
@@ -413,6 +416,14 @@ const ATTACHMENT_ACCEPT = '.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.pdf';
 function attachmentNote(state, documentType) {
   const att = state.attachments.find((a) => a.documentType === documentType);
   return att ? `<span class="file-attached-note">${escapeHtml(att.fileName)} (${Math.round(att.sizeBytes / 1024)} KB)</span>` : '';
+}
+
+// Builds a data: URL so an already-uploaded (not-yet-submitted) attachment can be previewed
+// as an <img> before the base64 blob is ever sent to the server.
+function attachmentDataUrl(state, documentType) {
+  const att = (state.attachments || []).find((a) => a.documentType === documentType);
+  if (!att || !att.base64Data) return null;
+  return `data:${att.mimeType};base64,${att.base64Data}`;
 }
 
 function reviewStepTitle(id) {
@@ -441,12 +452,12 @@ function reviewEducationSummary(state) {
   const rows = state.education
     .filter((row) => row.level || row.institution || row.facultyMajor || row.gpa)
     .map(
-      (row) => `<div class="review-subitem">
+      (row) => `<div class="review-subitem"><div class="review-grid">
       ${reviewRow({ th: 'ระดับวุฒิการศึกษา', en: 'Education Level' }, reviewEducationLevelLabel(row.level))}
       ${reviewRow({ th: 'สถาบัน', en: 'Institution' }, row.institution)}
       ${reviewRow({ th: 'คณะ/สาขา/หลักสูตร', en: 'Faculty / Major' }, row.facultyMajor)}
       ${reviewRow({ th: 'GPA', en: 'GPA' }, row.gpa)}
-    </div>`
+    </div></div>`
     )
     .join('');
   return rows || `<p class="step-hint">${bilingual({ th: 'ไม่ได้กรอกข้อมูล', en: 'Not provided' })}</p>`;
@@ -458,13 +469,15 @@ function reviewWorkHistorySummary(state) {
     .map((row) => {
       const period = `${row.from || '-'} - ${row.isCurrent ? bilingualPlain({ th: 'ปัจจุบัน', en: 'Present' }) : row.to || '-'}`;
       return `<div class="review-subitem">
+      <div class="review-grid">
       ${reviewRow({ th: 'ช่วงเวลาทำงาน', en: 'Employment Period' }, period)}
       ${reviewRow({ th: 'อายุงาน', en: 'Duration' }, row.duration)}
       ${reviewRow({ th: 'ชื่อนายจ้าง / บริษัท', en: "Employer's Name" }, row.employer)}
       ${reviewRow({ th: 'ตำแหน่ง', en: 'Position' }, row.position)}
       ${reviewRow({ th: 'เงินเดือนสุดท้าย', en: 'Last Salary' }, row.lastSalary)}
-      ${reviewRow({ th: 'หน้าที่ความรับผิดชอบ', en: 'Responsibilities' }, row.responsibilities)}
-      ${reviewRow({ th: 'เหตุผลที่ลาออก/สิ้นสุดการทำงาน', en: 'Reason for Leaving' }, row.reasonForLeaving)}
+      </div>
+      ${reviewRow({ th: 'หน้าที่ความรับผิดชอบ', en: 'Responsibilities' }, row.responsibilities, { long: true })}
+      ${reviewRow({ th: 'เหตุผลที่ลาออก/สิ้นสุดการทำงาน', en: 'Reason for Leaving' }, row.reasonForLeaving, { long: true })}
     </div>`;
     })
     .join('');
@@ -494,53 +507,59 @@ function reviewSkillsSummary(state) {
     computerSection += appRows + additionalAppRows;
   }
 
-  return `<div class="review-subitem">${langRows}</div><div class="review-subitem">${computerSection}</div>`;
+  return `<div class="review-subitem"><div class="review-grid">${langRows}</div></div><div class="review-subitem"><div class="review-grid">${computerSection}</div></div>`;
 }
 
 function reviewHealthSummary(state) {
   const h = state.health;
-  const rows = [
+  const gridRows = [
     reviewRow({ th: 'เจ็บป่วย/โรคติดต่อร้ายแรง', en: 'Illness / contagious disease' }, reviewOptionLabel('health', 'illnessYn', h.illness.yn)),
-    reviewRow({ th: 'โปรดระบุ', en: 'Please specify' }, h.illness.yn === 'yes' ? h.illness.specify : ''),
     reviewRow({ th: 'โรคประจำตัว', en: 'Chronic disease' }, reviewOptionLabel('health', 'chronicYn', h.chronicDisease.yn)),
-    reviewRow({ th: 'โปรดระบุ', en: 'Please specify' }, h.chronicDisease.yn === 'yes' ? h.chronicDisease.specify : ''),
     reviewRow({ th: 'ความบกพร่อง/ความพิการทางร่างกาย', en: 'Physical disability' }, reviewOptionLabel('health', 'disabilityYn', h.disability.yn)),
-    reviewRow({ th: 'โปรดระบุ', en: 'Please specify' }, h.disability.yn === 'yes' ? h.disability.specify : ''),
+  ];
+  const longRows = [
+    reviewRow({ th: 'โปรดระบุ (เจ็บป่วย)', en: 'Please specify (illness)' }, h.illness.yn === 'yes' ? h.illness.specify : '', { long: true }),
+    reviewRow({ th: 'โปรดระบุ (โรคประจำตัว)', en: 'Please specify (chronic disease)' }, h.chronicDisease.yn === 'yes' ? h.chronicDisease.specify : '', { long: true }),
+    reviewRow({ th: 'โปรดระบุ (ความบกพร่อง)', en: 'Please specify (disability)' }, h.disability.yn === 'yes' ? h.disability.specify : '', { long: true }),
   ];
   if (state.personal.gender === 'F' || state.personal.gender === 'LGBTQ+') {
-    rows.push(reviewRow({ th: 'ตั้งครรภ์', en: 'Pregnant' }, reviewOptionLabel('health', 'pregnantYn', h.pregnant.yn)));
+    gridRows.push(reviewRow({ th: 'ตั้งครรภ์', en: 'Pregnant' }, reviewOptionLabel('health', 'pregnantYn', h.pregnant.yn)));
     if (h.pregnant.yn === 'yes') {
-      rows.push(reviewRow({ th: 'อายุครรภ์', en: 'Pregnancy duration' }, reviewOptionLabel('health', 'pregnantSpecify', h.pregnant.specify)));
+      gridRows.push(reviewRow({ th: 'อายุครรภ์', en: 'Pregnancy duration' }, reviewOptionLabel('health', 'pregnantSpecify', h.pregnant.specify)));
     }
   }
-  return rows.join('');
+  return `<div class="review-grid">${gridRows.join('')}</div>${longRows.join('')}`;
 }
 
 function reviewOtherSummary(state) {
   const o = state.other;
-  const rows = [reviewRow({ th: 'ท่านทราบว่ามีตำแหน่งงานว่างจากที่ใด', en: 'Source of Posting' }, reviewOptionLabel('other', 'sourceOfPosting', o.sourceOfPosting))];
-  if (o.sourceOfPosting === 'other') rows.push(reviewRow({ th: 'โปรดระบุ', en: 'Please specify' }, o.sourceOfPostingSpecify));
-  if (o.sourceOfPosting === 'employee') rows.push(reviewRow({ th: 'ชื่อพนักงานที่แนะนำ', en: 'Referred by' }, o.referredBy));
-  rows.push(reviewRow({ th: 'เคยต้องโทษ/พัวพันคดีแพ่งหรืออาญา', en: 'Civil/criminal offense' }, reviewOptionLabel('other', 'criminalYn', o.criminalRecord.yn)));
-  if (o.criminalRecord.yn === 'yes') rows.push(reviewRow({ th: 'โปรดระบุ', en: 'Please specify' }, o.criminalRecord.specify));
-  rows.push(
-    reviewRow({ th: 'เคยสมัคร/เป็นพนักงาน SFG มาก่อน', en: 'Previously applied/worked at SFG' }, reviewOptionLabel('other', 'previousSfgYn', o.previousSFG.yn))
-  );
-  if (o.previousSFG.yn === 'yes') rows.push(reviewRow({ th: 'โปรดระบุ', en: 'Please specify' }, o.previousSFG.specify));
-  rows.push(reviewRow({ th: 'ยินดีไปปฏิบัติงานต่างจังหวัด/ต่างประเทศ', en: 'Willing to relocate' }, reviewOptionLabel('other', 'willingToRelocate', o.willingToRelocate)));
+  const gridRows = [
+    reviewRow({ th: 'ท่านทราบว่ามีตำแหน่งงานว่างจากที่ใด', en: 'Source of Posting' }, reviewOptionLabel('other', 'sourceOfPosting', o.sourceOfPosting)),
+    reviewRow({ th: 'เคยต้องโทษ/พัวพันคดีแพ่งหรืออาญา', en: 'Civil/criminal offense' }, reviewOptionLabel('other', 'criminalYn', o.criminalRecord.yn)),
+    reviewRow(
+      { th: 'เคยสมัคร/เป็นพนักงาน SFG มาก่อน', en: 'Previously applied/worked at SFG' },
+      reviewOptionLabel('other', 'previousSfgYn', o.previousSFG.yn)
+    ),
+    reviewRow({ th: 'ยินดีไปปฏิบัติงานต่างจังหวัด/ต่างประเทศ', en: 'Willing to relocate' }, reviewOptionLabel('other', 'willingToRelocate', o.willingToRelocate)),
+  ];
+  const longRows = [];
+  if (o.sourceOfPosting === 'other') longRows.push(reviewRow({ th: 'โปรดระบุ (แหล่งที่มา)', en: 'Please specify (source)' }, o.sourceOfPostingSpecify, { long: true }));
+  if (o.sourceOfPosting === 'employee') longRows.push(reviewRow({ th: 'ชื่อพนักงานที่แนะนำ', en: 'Referred by' }, o.referredBy, { long: true }));
+  if (o.criminalRecord.yn === 'yes') longRows.push(reviewRow({ th: 'โปรดระบุ (คดี)', en: 'Please specify (offense)' }, o.criminalRecord.specify, { long: true }));
+  if (o.previousSFG.yn === 'yes') longRows.push(reviewRow({ th: 'โปรดระบุ (SFG)', en: 'Please specify (SFG)' }, o.previousSFG.specify, { long: true }));
 
   const contactRows = (o.emergencyContacts || [])
     .filter((c) => c.name || c.mobile || c.relationship)
     .map(
-      (c) => `<div class="review-subitem">
+      (c) => `<div class="review-subitem"><div class="review-grid">
       ${reviewRow({ th: 'ชื่อ', en: 'Name' }, c.name)}
       ${reviewRow({ th: 'เบอร์โทรศัพท์มือถือ', en: 'Mobile Phone' }, c.mobile)}
       ${reviewRow({ th: 'ความสัมพันธ์', en: 'Relationship' }, c.relationship)}
-    </div>`
+    </div></div>`
     )
     .join('');
 
-  return `${rows.join('')}
+  return `<div class="review-grid">${gridRows.join('')}</div>${longRows.join('')}
     <h4>${bilingual({ th: 'ผู้ที่สามารถติดต่อได้ในกรณีฉุกเฉิน', en: 'Emergency Contacts' })}</h4>
     ${contactRows}`;
 }
@@ -559,15 +578,34 @@ function renderReviewStep(state) {
     )
     .join('');
 
+  const photoUrl = attachmentDataUrl(state, 'photo');
+
   return `
+    <div class="review-profile-header">
+      <div class="review-profile-photo">
+        ${
+          photoUrl
+            ? `<img src="${photoUrl}" alt="${escapeHtml(p.nameEnglish || p.nameThai || '')}" />`
+            : `<div class="review-photo-placeholder">${bilingual({ th: 'ไม่มีรูปถ่าย', en: 'No Photo' })}</div>`
+        }
+      </div>
+      <div class="review-profile-info">
+        <h2>${escapeHtml(p.nameThai || '')}</h2>
+        <p class="review-profile-sub">${escapeHtml(p.nameEnglish || '')}</p>
+        <p class="review-profile-position">${escapeHtml(p.positionApplying || '')}</p>
+      </div>
+    </div>
     <div class="review-section">
       <h3>${bilingual({ th: '1. ตำแหน่งงานที่ต้องการสมัคร', en: '1. Position Applied For' })}</h3>
+      <div class="review-grid">
       ${reviewRow({ th: 'ตำแหน่งที่สมัคร', en: 'Position' }, p.positionApplying)}
       ${reviewRow({ th: 'เงินเดือนที่ต้องการ', en: 'Expected Salary' }, p.expectedSalary)}
       ${reviewRow({ th: 'พื้นที่/ห้างที่สะดวก', en: 'Preferred Area' }, p.positionArea)}
+      </div>
     </div>
     <div class="review-section">
       <h3>${bilingual({ th: '2. ข้อมูลส่วนตัว', en: '2. Personal Data' })}</h3>
+      <div class="review-grid">
       ${reviewRow({ th: 'ชื่อ (ไทย)', en: 'Name (TH)' }, p.nameThai)}
       ${reviewRow({ th: 'ชื่อ (อังกฤษ)', en: 'Name (EN)' }, p.nameEnglish)}
       ${reviewRow({ th: 'เพศ', en: 'Gender' }, reviewOptionLabel('personal', 'gender', p.gender))}
@@ -576,6 +614,7 @@ function renderReviewStep(state) {
       ${reviewRow({ th: 'เลขบัตรประชาชน', en: 'ID Card No.' }, p.idCardNo)}
       ${reviewRow({ th: 'มือถือ', en: 'Mobile' }, p.mobilePhone)}
       ${reviewRow({ th: 'อีเมล', en: 'Email' }, p.email)}
+      </div>
     </div>
     <div class="review-section">
       <h3>${bilingual(reviewStepTitle('education'))}</h3>
