@@ -45,6 +45,9 @@
 
 .admin-row-actions { display: flex; gap: 8px; white-space: nowrap; }
 .admin-btn-small { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+.admin-btn-small:disabled { opacity: 0.35; cursor: not-allowed; }
+.admin-btn-danger { color: var(--error); border-color: var(--error); }
+.admin-btn-danger:hover { background: rgba(214, 73, 29, 0.08); }
 
 .admin-subtext { color: var(--muted); font-size: 12px; }
 

@@ -118,15 +118,19 @@ function bindAdminTabs() {
 
 function renderPositionsTable() {
   const tbody = document.getElementById('positions-tbody');
-  tbody.innerHTML = AdminState.positions
+  const list = AdminState.positions;
+  tbody.innerHTML = list
     .map(
-      (p) => `<tr data-position-id="${escapeHtml(p.id)}">
+      (p, i) => `<tr data-position-id="${escapeHtml(p.id)}">
         <td class="admin-editable-name">${escapeHtml(p.name)}</td>
         <td><input type="checkbox" data-position-field="isSalesPC" ${p.isSalesPC ? 'checked' : ''} /></td>
         <td>${p.isOpen ? '<span class="admin-badge admin-badge-open">เปิดรับ / Open</span>' : '<span class="admin-badge admin-badge-closed">ปิดรับ / Closed</span>'}</td>
         <td class="admin-row-actions">
+          <button type="button" class="btn btn-secondary admin-btn-small" data-position-action="move-up" title="เลื่อนขึ้น / Move up" ${i === 0 ? 'disabled' : ''}>&#9650;</button>
+          <button type="button" class="btn btn-secondary admin-btn-small" data-position-action="move-down" title="เลื่อนลง / Move down" ${i === list.length - 1 ? 'disabled' : ''}>&#9660;</button>
           <button type="button" class="btn btn-secondary admin-btn-small" data-position-action="edit-name">แก้ไขชื่อ</button>
           <button type="button" class="btn btn-secondary admin-btn-small" data-position-action="toggle-open">${p.isOpen ? 'ปิดรับ' : 'เปิดรับ'}</button>
+          ${!p.isOpen ? '<button type="button" class="btn btn-secondary admin-btn-small admin-btn-danger" data-position-action="delete">ลบ / Delete</button>' : ''}
         </td>
       </tr>`
     )
@@ -159,6 +163,56 @@ function renderPositionsTable() {
       }
     });
   });
+
+  tbody.querySelectorAll('[data-position-action="move-up"]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.closest('tr').getAttribute('data-position-id');
+      movePosition(id, 'up');
+    });
+  });
+
+  tbody.querySelectorAll('[data-position-action="move-down"]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.closest('tr').getAttribute('data-position-id');
+      movePosition(id, 'down');
+    });
+  });
+
+  tbody.querySelectorAll('[data-position-action="delete"]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.closest('tr').getAttribute('data-position-id');
+      const position = AdminState.positions.find((p) => p.id === id);
+      if (confirm(`ยืนยันการลบตำแหน่ง "${position.name}" ถาวร? / Permanently delete "${position.name}"?`)) {
+        deletePosition(id);
+      }
+    });
+  });
+}
+
+async function movePosition(id, direction) {
+  const statusEl = document.getElementById('positions-status');
+  statusEl.textContent = 'กำลังย้าย... / Moving...';
+  const result = await callAdmin('adminMovePosition', { id, direction });
+  if (isAuthError(result)) return showSignInScreen('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่ / Session expired, please sign in again.');
+  if (!result.ok) {
+    statusEl.textContent = 'ย้ายไม่สำเร็จ / Move failed: ' + result.error;
+    return;
+  }
+  statusEl.textContent = '';
+  await loadPositions();
+}
+
+async function deletePosition(id) {
+  const statusEl = document.getElementById('positions-status');
+  statusEl.textContent = 'กำลังลบ... / Deleting...';
+  const result = await callAdmin('adminDeletePosition', { id });
+  if (isAuthError(result)) return showSignInScreen('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่ / Session expired, please sign in again.');
+  if (!result.ok) {
+    statusEl.textContent = 'ลบไม่สำเร็จ / Delete failed: ' + result.error;
+    return;
+  }
+  statusEl.textContent = '';
+  await loadPositions();
 }
 
 async function savePositionField(id, fields) {

@@ -314,6 +314,10 @@ function handleAdminAction(payload) {
       return jsonResponse(addPosition(payload));
     case 'adminUpdatePosition':
       return jsonResponse(updatePosition(payload));
+    case 'adminDeletePosition':
+      return jsonResponse(deletePosition(payload));
+    case 'adminMovePosition':
+      return jsonResponse(movePosition(payload));
     case 'adminListApplications':
       return jsonResponse({ ok: true, applications: listAllApplications() });
     case 'adminExportXlsx':
@@ -385,6 +389,61 @@ function updatePosition(payload) {
     if (payload.isOpen !== undefined) updates.IsOpen = payload.isOpen === true;
     if (payload.isSalesPC !== undefined) updates.IsSalesPC = payload.isSalesPC === true;
     updateRowByHeaders(sheet, rowNum, updates);
+    return { ok: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Only closed positions can be deleted -- open ones should be closed first (matches the
+// admin UI, which only shows the delete button for closed rows), checked again here in case
+// of any client/server state mismatch.
+function deletePosition(payload) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    if (!payload.id) return { ok: false, error: 'missing_id' };
+    var ss = getSpreadsheet();
+    var sheet = ensureSheetWithHeaders(ss, 'Positions', POSITIONS_HEADERS);
+    backfillPositionIds(sheet);
+    var rowNum = findPositionRowById(sheet, payload.id);
+    if (rowNum === -1) return { ok: false, error: 'position_not_found' };
+    var lastCol = sheet.getLastColumn();
+    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var rowValues = sheet.getRange(rowNum, 1, 1, lastCol).getValues()[0];
+    if (rowValues[headers.indexOf('IsOpen')] === true) return { ok: false, error: 'position_is_open' };
+    sheet.deleteRow(rowNum);
+    return { ok: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Swaps a position's row with its immediate neighbor -- row order on the Positions sheet
+// IS the display order, both here in the admin table and in the public form's dropdown
+// (doGet's ?action=positions reads rows top-to-bottom in the same order), so moving a row
+// up/down directly controls where it shows up for applicants.
+function movePosition(payload) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    if (!payload.id || (payload.direction !== 'up' && payload.direction !== 'down')) {
+      return { ok: false, error: 'invalid_request' };
+    }
+    var ss = getSpreadsheet();
+    var sheet = ensureSheetWithHeaders(ss, 'Positions', POSITIONS_HEADERS);
+    backfillPositionIds(sheet);
+    var rowNum = findPositionRowById(sheet, payload.id);
+    if (rowNum === -1) return { ok: false, error: 'position_not_found' };
+    var targetRow = payload.direction === 'up' ? rowNum - 1 : rowNum + 1;
+    if (targetRow < 2 || targetRow > sheet.getLastRow()) return { ok: false, error: 'cannot_move' };
+    var lastCol = sheet.getLastColumn();
+    var rangeA = sheet.getRange(rowNum, 1, 1, lastCol);
+    var rangeB = sheet.getRange(targetRow, 1, 1, lastCol);
+    var valuesA = rangeA.getValues();
+    var valuesB = rangeB.getValues();
+    rangeA.setValues(valuesB);
+    rangeB.setValues(valuesA);
     return { ok: true };
   } finally {
     lock.releaseLock();
