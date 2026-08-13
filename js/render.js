@@ -570,7 +570,7 @@ function renderReviewStep(state) {
       <h3>${bilingual({ th: '2. ข้อมูลส่วนตัว', en: '2. Personal Data' })}</h3>
       ${reviewRow({ th: 'ชื่อ (ไทย)', en: 'Name (TH)' }, p.nameThai)}
       ${reviewRow({ th: 'ชื่อ (อังกฤษ)', en: 'Name (EN)' }, p.nameEnglish)}
-      ${reviewRow({ th: 'เพศ', en: 'Gender' }, p.gender)}
+      ${reviewRow({ th: 'เพศ', en: 'Gender' }, reviewOptionLabel('personal', 'gender', p.gender))}
       ${reviewRow({ th: 'วันเกิด', en: 'DOB' }, p.dobBE)}
       ${reviewRow({ th: 'อายุ', en: 'Age' }, p.age)}
       ${reviewRow({ th: 'เลขบัตรประชาชน', en: 'ID Card No.' }, p.idCardNo)}
