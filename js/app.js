@@ -221,6 +221,11 @@ const App = {
         if (el.dataset.numeric === 'true') {
           const digitsOnly = el.value.replace(/\D/g, '');
           if (digitsOnly !== el.value) el.value = digitsOnly;
+        } else if (el.dataset.decimal === 'true') {
+          let cleaned = el.value.replace(/[^\d.]/g, '');
+          const parts = cleaned.split('.');
+          if (parts.length > 2) cleaned = parts[0] + '.' + parts.slice(1).join('');
+          if (cleaned !== el.value) el.value = cleaned;
         }
         let value;
         if (el.type === 'checkbox') value = el.checked;

@@ -249,7 +249,7 @@ function renderEducationStep(state) {
         <div class="field-group"><label class="field-label">${bilingual({ th: 'ระดับวุฒิการศึกษา', en: 'Education Level' })}</label>${renderEducationLevelSelect(`education.${i}.level`, row.level)}</div>
         <div class="field-group"><label class="field-label">${bilingual({ th: 'ชื่อสถาบันการศึกษา', en: 'Institution' })}</label><input type="text" data-path="education.${i}.institution" value="${escapeHtml(row.institution || '')}" /></div>
         <div class="field-group"><label class="field-label">${bilingual({ th: 'คณะ/สาขา/หลักสูตร', en: 'Faculty / Major / Program' })}</label><input type="text" data-path="education.${i}.facultyMajor" value="${escapeHtml(row.facultyMajor || '')}" /></div>
-        <div class="field-group"><label class="field-label">${bilingual({ th: 'เกรดเฉลี่ย (GPA)', en: 'GPA' })}</label><input type="text" data-path="education.${i}.gpa" value="${escapeHtml(row.gpa || '')}" /></div>
+        <div class="field-group"><label class="field-label">${bilingual({ th: 'เกรดเฉลี่ย (GPA)', en: 'GPA' })}</label><input type="text" inputmode="decimal" data-decimal="true" data-path="education.${i}.gpa" value="${escapeHtml(row.gpa || '')}" /></div>
       </div>
       ${state.education.length > 1 ? `<button type="button" class="btn-remove-row" data-remove-repeater="education" data-index="${i}">${bilingual({ th: 'ลบแถว', en: 'Remove' })}</button>` : ''}
     </div>`
