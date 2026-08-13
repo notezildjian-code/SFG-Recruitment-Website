@@ -125,6 +125,7 @@ const App = {
       this.bindNamePrefixAutoGender(stepContainer);
     }
     if (step.id === 'workHistory') this.bindWorkHistoryAutoCalc(stepContainer);
+    if (step.id === 'other') this.bindDocUploads(stepContainer);
     if (step.id === 'review') this.bindReview(stepContainer);
     if (step.id === 'consentGate') this.bindConsentGate(stepContainer);
   },
@@ -291,7 +292,7 @@ const App = {
     });
   },
 
-  bindReview(container) {
+  bindDocUploads(container) {
     container.querySelectorAll('[data-doc-upload]').forEach((input) => {
       input.addEventListener('change', async () => {
         const doc = input.getAttribute('data-doc-upload');
@@ -306,7 +307,9 @@ const App = {
         this.render();
       });
     });
+  },
 
+  bindReview(container) {
     const finalCheckbox = container.querySelector('#finalConsentCheckbox');
     finalCheckbox.addEventListener('change', () => {
       this.state.consent.consentGiven = finalCheckbox.checked;

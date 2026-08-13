@@ -393,6 +393,17 @@ function renderOtherStep(state) {
     )
     .join('');
 
+  const additionalAttachmentRows = (state.consent.additionalAttachments || [])
+    .map(
+      (row, i) => `
+    <div class="doc-checklist-item" data-repeater="additionalAttachments" data-index="${i}">
+      <input type="file" accept="${ATTACHMENT_ACCEPT}" data-doc-upload="${row.id}" />
+      ${attachmentNote(state, row.id)}
+      <button type="button" class="btn-remove-row" data-remove-repeater="additionalAttachments" data-index="${i}">${bilingual({ th: 'ลบ', en: 'Remove' })}</button>
+    </div>`
+    )
+    .join('');
+
   return `
     ${renderFieldsList(step.fields, state)}
     <div class="subsection">
@@ -400,6 +411,28 @@ function renderOtherStep(state) {
       <div id="emergencyContacts-rows">${rows}</div>
       <button type="button" class="btn-add-row" data-add-repeater="emergencyContacts">${bilingual({ th: '+ เพิ่มผู้ติดต่อ', en: '+ Add Contact' })}</button>
       <div class="field-error" data-error-for="emergencyContacts"></div>
+    </div>
+    <div class="subsection">
+      <h3>${bilingual({ th: 'เอกสารแนบ', en: 'Attachments' })}</h3>
+      <p class="step-hint">${bilingual({ th: 'รองรับไฟล์ประเภท .JPG, .PNG, .DOC, .DOCX, .XLS, .XLSX และ .PDF เท่านั้น', en: 'Supported file types: .JPG, .PNG, .DOC, .DOCX, .XLS, .XLSX and .PDF only.' })}</p>
+      <div class="doc-checklist">
+        <div class="doc-checklist-item">
+          <label class="field-label">${bilingual({ th: 'รูปถ่าย', en: 'Photo' })}</label>
+          <input type="file" accept="${ATTACHMENT_ACCEPT}" data-doc-upload="photo" />
+          ${attachmentNote(state, 'photo')}
+        </div>
+        <div class="doc-checklist-item">
+          <label class="field-label">${bilingual({ th: 'ประวัติส่วนตัว (CV)', en: 'Resume / CV' })}</label>
+          <input type="file" accept="${ATTACHMENT_ACCEPT}" data-doc-upload="cv" />
+          ${attachmentNote(state, 'cv')}
+        </div>
+        ${additionalAttachmentRows}
+      </div>
+      <button type="button" class="btn-add-row" data-add-repeater="additionalAttachments">${bilingual({ th: '+ เพิ่มไฟล์แนบ', en: '+ Add Attachment' })}</button>
+      <div class="field-group field-full">
+        <label class="field-label">${bilingual({ th: 'ลิงก์ผลงาน / Portfolio (ถ้ามี)', en: 'Portfolio link (if any)' })}</label>
+        <input type="url" placeholder="https://..." data-path="consent.portfolioLink" value="${escapeHtml(state.consent.portfolioLink || '')}" />
+      </div>
     </div>`;
 }
 
@@ -566,18 +599,6 @@ function reviewOtherSummary(state) {
 
 function renderReviewStep(state) {
   const p = state.personal;
-
-  const additionalAttachmentRows = (state.consent.additionalAttachments || [])
-    .map(
-      (row, i) => `
-    <div class="doc-checklist-item" data-repeater="additionalAttachments" data-index="${i}">
-      <input type="file" accept="${ATTACHMENT_ACCEPT}" data-doc-upload="${row.id}" />
-      ${attachmentNote(state, row.id)}
-      <button type="button" class="btn-remove-row" data-remove-repeater="additionalAttachments" data-index="${i}">${bilingual({ th: 'ลบ', en: 'Remove' })}</button>
-    </div>`
-    )
-    .join('');
-
   const photoUrl = attachmentDataUrl(state, 'photo');
 
   return `
@@ -637,28 +658,6 @@ function renderReviewStep(state) {
       ${reviewOtherSummary(state)}
     </div>
     <div class="review-section consent-final">
-      <div class="subsection">
-        <h4>${bilingual({ th: 'เอกสารแนบ', en: 'Attachments' })}</h4>
-        <p class="step-hint">${bilingual({ th: 'รองรับไฟล์ประเภท .JPG, .PNG, .DOC, .DOCX, .XLS, .XLSX และ .PDF เท่านั้น', en: 'Supported file types: .JPG, .PNG, .DOC, .DOCX, .XLS, .XLSX and .PDF only.' })}</p>
-        <div class="doc-checklist">
-          <div class="doc-checklist-item">
-            <label class="field-label">${bilingual({ th: 'รูปถ่าย', en: 'Photo' })}</label>
-            <input type="file" accept="${ATTACHMENT_ACCEPT}" data-doc-upload="photo" />
-            ${attachmentNote(state, 'photo')}
-          </div>
-          <div class="doc-checklist-item">
-            <label class="field-label">${bilingual({ th: 'ประวัติส่วนตัว (CV)', en: 'Resume / CV' })}</label>
-            <input type="file" accept="${ATTACHMENT_ACCEPT}" data-doc-upload="cv" />
-            ${attachmentNote(state, 'cv')}
-          </div>
-          ${additionalAttachmentRows}
-        </div>
-        <button type="button" class="btn-add-row" data-add-repeater="additionalAttachments">${bilingual({ th: '+ เพิ่มไฟล์แนบ', en: '+ Add Attachment' })}</button>
-        <div class="field-group field-full">
-          <label class="field-label">${bilingual({ th: 'ลิงก์ผลงาน / Portfolio (ถ้ามี)', en: 'Portfolio link (if any)' })}</label>
-          <input type="url" placeholder="https://..." data-path="consent.portfolioLink" value="${escapeHtml(state.consent.portfolioLink || '')}" />
-        </div>
-      </div>
       <p class="certification-text">"I hereby certify that all the information and documents in this application are CORRECT and TRUE. I am aware that if any information is found to be false by intention, I agree be justified and immediately dismissed without any warning and/or compensation."</p>
       <div class="field-group field-full">
         <label class="field-label">${bilingual({ th: 'ลายมือชื่อผู้สมัคร (พิมพ์ชื่อ-นามสกุลเต็ม)', en: 'Signature of Applicant (type full name)' })}</label>
