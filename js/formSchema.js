@@ -75,7 +75,6 @@ const SOURCE_OF_POSTING_OPTIONS = [
   { value: 'jobtopgun', label: { th: 'Jobtopgun', en: 'Jobtopgun' } },
   { value: 'jobsdb', label: { th: 'Jobsdb', en: 'Jobsdb' } },
   { value: 'company_website', label: { th: 'เว็บไซต์บริษัท', en: 'Company Website' } },
-  { value: 'friend', label: { th: 'มีบุคคลแนะนำ', en: 'Referred by a Contact' } },
   { value: 'employee', label: { th: 'พนักงานบริษัทแนะนำ', en: 'Employee Referral' } },
   { value: 'other', label: { th: 'อื่น ๆ', en: 'Other' } },
 ];
