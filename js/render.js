@@ -312,8 +312,9 @@ function renderSkillsStep(state) {
       (row, i) => `
       <tr data-repeater="additionalLanguages" data-index="${i}">
         <td><input type="text" placeholder="${escapeHtml(bilingualPlain({ th: 'ชื่อภาษา', en: 'Language name' }))}" data-path="skills.languages.additional.${i}.name" value="${escapeHtml(row.name || '')}" /></td>
+        <td><div class="rating-group">${renderRatingRadios(`skills.languages.additional.${i}.overall`, row.overall)}</div></td>
         <td>
-          <div class="rating-group">${renderRatingRadios(`skills.languages.additional.${i}.overall`, row.overall)}</div>
+          <input type="text" class="lang-test-input" placeholder="${escapeHtml(bilingualPlain({ th: 'เช่น JLPT N3', en: 'e.g. JLPT N3' }))}" data-path="skills.languages.additional.${i}.testResult" value="${escapeHtml(row.testResult || '')}" />
           <button type="button" class="btn-remove-row" data-remove-repeater="additionalLanguages" data-index="${i}">${bilingual({ th: 'ลบ', en: 'Remove' })}</button>
         </td>
       </tr>`
@@ -325,11 +326,13 @@ function renderSkillsStep(state) {
       <thead><tr>
         <th>${bilingual({ th: 'ภาษา', en: 'Language' })}</th>
         ${ratingColumnHeader({ th: 'ความสามารถโดยรวม', en: 'Overall Ability' })}
+        <th>${bilingual({ th: 'ผลสอบ (ถ้ามี)', en: 'Test Score (if any)' })}</th>
       </tr></thead>
       <tbody>
         <tr>
           <td>${bilingual({ th: 'ภาษาอังกฤษ', en: 'English' })}</td>
           <td><div class="rating-group">${renderRatingRadios('skills.languages.english.overall', lang.english.overall)}</div></td>
+          <td><input type="text" class="lang-test-input" placeholder="${escapeHtml(bilingualPlain({ th: 'เช่น TOEIC 750', en: 'e.g. TOEIC 750' }))}" data-path="skills.languages.english.testResult" value="${escapeHtml(lang.english.testResult || '')}" /></td>
         </tr>
         ${additionalLangRows}
       </tbody>
@@ -447,7 +450,7 @@ function reviewRow(label, value, options) {
 const ATTACHMENT_ACCEPT = '.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.pdf';
 
 function attachmentNote(state, documentType) {
-  const att = state.attachments.find((a) => a.documentType === documentType);
+  const att = (state.attachments || []).find((a) => a.documentType === documentType);
   return att ? `<span class="file-attached-note">${escapeHtml(att.fileName)} (${Math.round(att.sizeBytes / 1024)} KB)</span>` : '';
 }
 
@@ -523,6 +526,12 @@ function reviewSkillsSummary(state) {
     reviewRow({ th: 'ภาษาอังกฤษ', en: 'English' }, reviewRatingLabel(lang.english.overall)),
     ...(lang.additional || []).map((row) => reviewRow({ th: row.name || '', en: row.name || '' }, reviewRatingLabel(row.overall))),
   ].join('');
+  const langTestRows = [
+    reviewRow({ th: 'ผลสอบภาษาอังกฤษ', en: 'English test score' }, lang.english.testResult, { long: true }),
+    ...(lang.additional || [])
+      .filter((row) => row.name)
+      .map((row) => reviewRow({ th: `ผลสอบ${row.name}`, en: `${row.name} test score` }, row.testResult, { long: true })),
+  ].join('');
 
   const canUseComputer = state.skills.computer.canUse === 'yes';
   let computerSection = reviewRow(
@@ -540,7 +549,7 @@ function reviewSkillsSummary(state) {
     computerSection += appRows + additionalAppRows;
   }
 
-  return `<div class="review-subitem"><div class="review-grid">${langRows}</div></div><div class="review-subitem"><div class="review-grid">${computerSection}</div></div>`;
+  return `<div class="review-subitem"><div class="review-grid">${langRows}</div>${langTestRows}</div><div class="review-subitem"><div class="review-grid">${computerSection}</div></div>`;
 }
 
 function reviewHealthSummary(state) {
@@ -592,9 +601,28 @@ function reviewOtherSummary(state) {
     )
     .join('');
 
+  const attachmentsList = state.attachments || [];
+  const photoAtt = attachmentsList.find((a) => a.documentType === 'photo');
+  const cvAtt = attachmentsList.find((a) => a.documentType === 'cv');
+  const additionalAttNames = (state.consent.additionalAttachments || [])
+    .map((row) => attachmentsList.find((a) => a.documentType === row.id))
+    .filter(Boolean)
+    .map((a) => a.fileName);
+
+  const attachmentRows = [
+    reviewRow({ th: 'รูปถ่าย', en: 'Photo' }, photoAtt ? photoAtt.fileName : ''),
+    reviewRow({ th: 'ประวัติส่วนตัว (CV)', en: 'Resume / CV' }, cvAtt ? cvAtt.fileName : ''),
+  ];
+  const attachmentLongRows = [
+    additionalAttNames.length ? reviewRow({ th: 'ไฟล์แนบเพิ่มเติม', en: 'Additional Attachments' }, additionalAttNames.join(', '), { long: true }) : '',
+    reviewRow({ th: 'ลิงก์ผลงาน / Portfolio', en: 'Portfolio Link' }, state.consent.portfolioLink, { long: true }),
+  ];
+
   return `<div class="review-grid">${gridRows.join('')}</div>${longRows.join('')}
     <h4>${bilingual({ th: 'ผู้ที่สามารถติดต่อได้ในกรณีฉุกเฉิน', en: 'Emergency Contacts' })}</h4>
-    ${contactRows}`;
+    ${contactRows}
+    <h4>${bilingual({ th: 'เอกสารแนบ', en: 'Attachments' })}</h4>
+    <div class="review-grid">${attachmentRows.join('')}</div>${attachmentLongRows.join('')}`;
 }
 
 function renderReviewStep(state) {

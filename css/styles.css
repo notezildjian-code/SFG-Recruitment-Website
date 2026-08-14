@@ -54,6 +54,19 @@ body {
 .header-title .th { display: block; font-size: 16px; font-weight: 600; }
 .header-title .en { display: block; font-size: 12px; opacity: 0.85; }
 
+.btn-start-over {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #fff;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.btn-start-over:hover { background: rgba(255, 255, 255, 0.1); }
+
 .page-main {
   max-width: 720px;
   margin: 0 auto;
@@ -435,6 +448,8 @@ input[disabled], input[readonly] { background: var(--bg); color: var(--muted); }
   .review-row { flex-direction: column; gap: 2px; }
   .review-grid { grid-template-columns: 1fr; }
   .review-profile-header { flex-direction: column; text-align: center; }
+  .site-header-inner { flex-wrap: wrap; row-gap: 10px; }
+  .btn-start-over { font-size: 11px; padding: 4px 8px; }
 }
 
 /* Dark mode support (system preference) */

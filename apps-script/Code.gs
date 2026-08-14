@@ -51,9 +51,9 @@ var APPLICATIONS_HEADERS = [
   'EmergencyContact3_Name', 'EmergencyContact3_Mobile', 'EmergencyContact3_Relationship',
   'EmergencyContactExtra',
 
-  'AdditionalLanguage1_Name', 'AdditionalLanguage1_Overall',
-  'AdditionalLanguage2_Name', 'AdditionalLanguage2_Overall',
-  'AdditionalLanguage3_Name', 'AdditionalLanguage3_Overall',
+  'AdditionalLanguage1_Name', 'AdditionalLanguage1_Overall', 'AdditionalLanguage1_TestResult',
+  'AdditionalLanguage2_Name', 'AdditionalLanguage2_Overall', 'AdditionalLanguage2_TestResult',
+  'AdditionalLanguage3_Name', 'AdditionalLanguage3_Overall', 'AdditionalLanguage3_TestResult',
   'AdditionalLanguageExtra',
 
   'AdditionalApp1_Name', 'AdditionalApp1_Rating',
@@ -229,8 +229,8 @@ function buildApplicationRowObject(p, attachmentColumns) {
   ));
 
   Object.assign(rowObj, flattenRepeatableSection(skills.languages.additional, 3, 'AdditionalLanguage',
-    function (row) { return { Name: row.name, Overall: row.overall }; },
-    function (row) { return 'Name: ' + row.name + ' | Overall: ' + row.overall; }
+    function (row) { return { Name: row.name, Overall: row.overall, TestResult: row.testResult }; },
+    function (row) { return 'Name: ' + row.name + ' | Overall: ' + row.overall + ' | TestResult: ' + row.testResult; }
   ));
 
   Object.assign(rowObj, flattenRepeatableSection(skills.computer.additionalApps, 3, 'AdditionalApp',

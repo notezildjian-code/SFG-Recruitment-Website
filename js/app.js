@@ -67,6 +67,10 @@ const App = {
     }
     if (!this.state.meta) this.state.meta = { formLoadedAt: Date.now() };
     if (!('availablePositions' in this.state)) this.state.availablePositions = [];
+    // saveDraft() deliberately strips `attachments` before persisting (base64 file data would
+    // blow past localStorage's quota), so every restored draft is missing this key -- restore
+    // it here rather than relying on every reader to guard against it individually.
+    if (!this.state.attachments) this.state.attachments = [];
 
     if (this.state.language) {
       window.SFG_LANG = this.state.language;
@@ -76,6 +80,7 @@ const App = {
     }
 
     this.render();
+    this.bindStartOver();
 
     fetchPositions().then((list) => {
       this.state.availablePositions = list;
@@ -254,7 +259,7 @@ const App = {
         if (key === 'education') this.state.education.push({ level: '', institution: '', facultyMajor: '', gpa: '' });
         if (key === 'workHistory') this.state.workHistory.push({ from: '', to: '', fromMonth: '', fromYear: '', toMonth: '', toYear: '', isCurrent: false, duration: '', employer: '', position: '', lastSalary: '', responsibilities: '', reasonForLeaving: '' });
         if (key === 'emergencyContacts') this.state.other.emergencyContacts.push({ name: '', mobile: '', relationship: '' });
-        if (key === 'additionalLanguages') this.state.skills.languages.additional.push({ name: '', overall: '' });
+        if (key === 'additionalLanguages') this.state.skills.languages.additional.push({ name: '', overall: '', testResult: '' });
         if (key === 'additionalApps') this.state.skills.computer.additionalApps.push({ name: '', rating: '' });
         if (key === 'additionalAttachments') {
           if (!this.state.consent.additionalAttachments) this.state.consent.additionalAttachments = [];
@@ -281,6 +286,25 @@ const App = {
         saveDraft(this.state);
         this.render();
       });
+    });
+  },
+
+  // Bound once from init() -- the "Start Over" button lives in the static header markup,
+  // which render() never touches, so this must not be re-bound on every render() call.
+  bindStartOver() {
+    const btn = document.getElementById('btn-start-over');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const confirmed = confirm(
+        'ต้องการล้างข้อมูลที่กรอกไว้ทั้งหมดและเริ่มใบสมัครใหม่หรือไม่?\nClear all entered data and start a new application?'
+      );
+      if (!confirmed) return;
+      const lang = this.state.language;
+      clearDraft(this.state.applicationId);
+      this.state = createInitialState();
+      this.state.language = lang;
+      this.currentStep = lang ? CONSENT_STEP_INDEX : LANGUAGE_STEP_INDEX;
+      this.render();
     });
   },
 

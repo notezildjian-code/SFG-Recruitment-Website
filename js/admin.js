@@ -350,9 +350,9 @@ const DETAIL_FIELD_GROUPS = [
     title: 'ทักษะและความสามารถ / Skills',
     fields: [
       ['Lang_English_Overall', 'ภาษาอังกฤษ (คะแนน)'], ['Lang_English_TestResult', 'ผลสอบภาษาอังกฤษ'],
-      ['AdditionalLanguage1_Name', 'ภาษาเพิ่มเติม #1'], ['AdditionalLanguage1_Overall', 'ภาษาเพิ่มเติม #1 คะแนน'],
-      ['AdditionalLanguage2_Name', 'ภาษาเพิ่มเติม #2'], ['AdditionalLanguage2_Overall', 'ภาษาเพิ่มเติม #2 คะแนน'],
-      ['AdditionalLanguage3_Name', 'ภาษาเพิ่มเติม #3'], ['AdditionalLanguage3_Overall', 'ภาษาเพิ่มเติม #3 คะแนน'],
+      ['AdditionalLanguage1_Name', 'ภาษาเพิ่มเติม #1'], ['AdditionalLanguage1_Overall', 'ภาษาเพิ่มเติม #1 คะแนน'], ['AdditionalLanguage1_TestResult', 'ภาษาเพิ่มเติม #1 ผลสอบ'],
+      ['AdditionalLanguage2_Name', 'ภาษาเพิ่มเติม #2'], ['AdditionalLanguage2_Overall', 'ภาษาเพิ่มเติม #2 คะแนน'], ['AdditionalLanguage2_TestResult', 'ภาษาเพิ่มเติม #2 ผลสอบ'],
+      ['AdditionalLanguage3_Name', 'ภาษาเพิ่มเติม #3'], ['AdditionalLanguage3_Overall', 'ภาษาเพิ่มเติม #3 คะแนน'], ['AdditionalLanguage3_TestResult', 'ภาษาเพิ่มเติม #3 ผลสอบ'],
       ['AdditionalLanguageExtra', 'ภาษาเพิ่มเติม (เกินจำนวนที่แสดง)'],
       ['Computer_CanUse', 'ใช้คอมพิวเตอร์ได้'],
       ['Computer_Word_Rating', 'Word'], ['Computer_Excel_Rating', 'Excel'], ['Computer_PowerPoint_Rating', 'PowerPoint'],
