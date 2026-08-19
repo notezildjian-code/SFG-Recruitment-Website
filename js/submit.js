@@ -1,9 +1,17 @@
 function assemblePayload(state, honeypotValue) {
+  // If the applicant picked "Other position", send the typed-in name as the actual
+  // PositionApplying value so it lands in the sheet as a real position name, not the
+  // sentinel — no Code.gs change needed, Admin just sees the text as entered.
+  const personal = { ...state.personal };
+  if (personal.positionApplying === OTHER_POSITION_VALUE) {
+    personal.positionApplying = (personal.positionOtherText || '').trim();
+  }
+
   return {
     applicationId: state.applicationId,
     honeypot: honeypotValue || '',
     formLoadedAt: state.meta.formLoadedAt,
-    personal: state.personal,
+    personal,
     education: state.education.filter((e) => e.institution && e.institution.trim()),
     workHistory: state.workHistory.filter((w) => w.employer && w.employer.trim()),
     skills: state.skills,

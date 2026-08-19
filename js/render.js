@@ -196,16 +196,27 @@ function renderPositionSalaryStep(state) {
   const positions = state.availablePositions || [];
   const selectedName = state.personal.positionApplying || '';
 
+  const isOther = selectedName === OTHER_POSITION_VALUE;
+
   let positionField;
   if (positions.length > 0) {
     const placeholder = `<option value="" disabled ${!selectedName ? 'selected' : ''}>-- ${bilingual({ th: 'เลือกตำแหน่ง', en: 'Select position' })} --</option>`;
     const opts = positions
       .map((p) => `<option value="${escapeHtml(p.name)}" ${p.name === selectedName ? 'selected' : ''}>${escapeHtml(p.name)}</option>`)
       .join('');
-    positionField = `<select data-position-select="true" data-path="personal.positionApplying" data-trigger="true">${placeholder}${opts}</select>`;
+    const otherOpt = `<option value="${OTHER_POSITION_VALUE}" ${isOther ? 'selected' : ''}>${bilingual({ th: 'ตำแหน่งอื่น ๆ', en: 'Other position' })}</option>`;
+    positionField = `<select data-position-select="true" data-path="personal.positionApplying" data-trigger="true">${placeholder}${opts}${otherOpt}</select>`;
   } else {
     positionField = `<input type="text" data-path="personal.positionApplying" value="${escapeHtml(selectedName)}" />`;
   }
+
+  const otherTextField = isOther
+    ? `<div class="field-group field-full" data-field-id="positionOtherText">
+        <label class="field-label">${bilingual({ th: 'โปรดระบุตำแหน่งที่ต้องการสมัคร', en: 'Please specify the position' })}<span class="required-mark">*</span></label>
+        <input type="text" data-path="personal.positionOtherText" value="${escapeHtml(state.personal.positionOtherText || '')}" />
+        <div class="field-error" data-error-for="positionOtherText"></div>
+      </div>`
+    : '';
 
   const areaField = state.personal.positionIsSalesPC
     ? `<div class="field-group field-full" data-field-id="positionArea">
@@ -222,6 +233,7 @@ function renderPositionSalaryStep(state) {
         ${positionField}
         <div class="field-error" data-error-for="positionApplying"></div>
       </div>
+      ${otherTextField}
       ${areaField}
     </div>
     ${renderFieldsList(step.fields, state)}`;
@@ -628,6 +640,7 @@ function reviewOtherSummary(state) {
 function renderReviewStep(state) {
   const p = state.personal;
   const photoUrl = attachmentDataUrl(state, 'photo');
+  const displayPosition = p.positionApplying === OTHER_POSITION_VALUE ? p.positionOtherText : p.positionApplying;
 
   return `
     <div class="review-profile-header">
@@ -641,13 +654,13 @@ function renderReviewStep(state) {
       <div class="review-profile-info">
         <h2>${escapeHtml(p.nameThai || '')}</h2>
         <p class="review-profile-sub">${escapeHtml(p.nameEnglish || '')}</p>
-        <p class="review-profile-position">${escapeHtml(p.positionApplying || '')}</p>
+        <p class="review-profile-position">${escapeHtml(displayPosition || '')}</p>
       </div>
     </div>
     <div class="review-section">
       <h3>${bilingual({ th: '1. ตำแหน่งงานที่ต้องการสมัคร', en: '1. Position Applied For' })}</h3>
       <div class="review-grid">
-      ${reviewRow({ th: 'ตำแหน่งที่สมัคร', en: 'Position' }, p.positionApplying)}
+      ${reviewRow({ th: 'ตำแหน่งที่สมัคร', en: 'Position' }, displayPosition)}
       ${reviewRow({ th: 'เงินเดือนที่ต้องการ', en: 'Expected Salary' }, p.expectedSalary)}
       ${reviewRow({ th: 'พื้นที่/ห้างที่สะดวก', en: 'Preferred Area' }, p.positionArea)}
       </div>

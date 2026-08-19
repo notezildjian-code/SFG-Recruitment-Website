@@ -1,7 +1,7 @@
 // Bumped whenever the state shape changes in a backwards-incompatible way.
 // A saved draft from an older version is discarded on load instead of crashing
 // against fields it no longer has (or fields it has that got renamed/removed).
-const SCHEMA_VERSION = 9;
+const SCHEMA_VERSION = 10;
 
 function createInitialState() {
   return {
@@ -12,7 +12,7 @@ function createInitialState() {
     consentGateAccepted: false,
     availablePositions: [],
     personal: {
-      positionApplying: '', positionIsSalesPC: false, positionArea: '', expectedSalary: '',
+      positionApplying: '', positionIsSalesPC: false, positionArea: '', positionOtherText: '', expectedSalary: '',
       namePrefix: '', nameThai: '', nameEnglish: '', nickname: '',
       gender: '', heightCm: '', weightKg: '', dobBE: '', dobDay: '', dobMonth: '', dobYear: '', age: '',
       idCardNo: '', mobilePhone: '', email: '', lineId: '', address: '', postalCode: '',
@@ -242,6 +242,7 @@ const App = {
           const pos = (this.state.availablePositions || []).find((p) => p.name === value);
           this.state.personal.positionIsSalesPC = !!(pos && pos.isSalesPC);
           if (!this.state.personal.positionIsSalesPC) this.state.personal.positionArea = '';
+          if (value !== OTHER_POSITION_VALUE) this.state.personal.positionOtherText = '';
         }
 
         saveDraft(this.state);

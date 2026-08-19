@@ -15,6 +15,9 @@ function validateStep(step, state) {
     if (state.personal.positionIsSalesPC && (!state.personal.positionArea || !state.personal.positionArea.trim())) {
       errors.push({ fieldId: 'positionArea', message: { th: 'กรุณากรอกพื้นที่หรือห้างที่สะดวก', en: 'Please specify your preferred area.' } });
     }
+    if (state.personal.positionApplying === OTHER_POSITION_VALUE && (!state.personal.positionOtherText || !state.personal.positionOtherText.trim())) {
+      errors.push({ fieldId: 'positionOtherText', message: { th: 'กรุณาระบุตำแหน่งที่ต้องการสมัคร', en: 'Please specify the position.' } });
+    }
   }
 
   if (step.fields) {

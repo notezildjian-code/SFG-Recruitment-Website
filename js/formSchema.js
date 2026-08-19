@@ -1,6 +1,11 @@
 // Single source of truth for form fields, labels (Thai + English) and validation rules.
 // Edit this file to add/rename/remove fields — render.js and validation.js both read from it.
 
+// Sentinel value for the "Other position" option in the position dropdown — lets applicants
+// apply for a position not yet listed in the Positions sheet, without Admin having to add it
+// first. render.js swaps in the actual typed text before submission (see submit.js).
+const OTHER_POSITION_VALUE = '__other__';
+
 // Ordered highest to lowest so the per-row level dropdown lists the most advanced
 // qualifications first — applicants are asked to add their highest education first.
 const EDUCATION_LEVELS = [
